@@ -46,10 +46,13 @@ function patchMono() {
 patchRecursiveDesktop
 patchMono ./VictorMono
 
-# # sans
-patchSans ./Grandstander/
+# sans
+patchSans ./Grandstander
 patchSans ./Titillium
 patchSans ./Candara
 patchSans ./Gisha
+
+# handwriting
+patchSans ./Papyrus
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh
