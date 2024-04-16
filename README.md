@@ -14,13 +14,48 @@
 ## setup
 ```bash
 $ brew install fontforge
-
-# font-patcher
-$ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
-$ curl -o /opt/FontPatcher/FontPatcher.zip \
-       -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip
-$ unzip -o /opt/FontPatcher/FontPatcher.zip /opt/FontPatcher
 ```
+
+### font-patcher
+- v3.2.1.1
+
+  > [!NOTE|label:updates in v3.2.1.1]
+  > - extended the length limitation 100 ( was 31 )
+  > - fixed the `SyntaxWarning: invalid escape sequence '\='`
+  > - add command-line completion for font-patcher
+
+  ```
+  $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
+  $ curl -o /opt/FontPatcher/FontPatcher.zip \
+         -fsSL https://github.com/marslo/fonts/raw/fonts/FontPatcher.v3.2.1.1.zip
+  $ unzip -o /opt/FontPatcher/FontPatcher.zip /opt/FontPatcher
+
+  # setup completion
+  ## osx
+  $ cp /opt/FontPatcher/completion/font-patcher.sh /usr/local/etc/bash_completion.d/
+
+  ## centos/wsl
+  $ cp /opt/FontPatcher/completion/font-patcher.sh /usr/share/bash-completion/completions/
+  # or
+  $ cp /opt/FontPatcher/completion/font-patcher.sh /etc/bash_completion.d/
+
+  # setup environment
+  $ cat >> ~/.bashrc << EOF
+  FONT_PATCHER='/opt/FontPatcher'
+  test -d "${FONT_PATCHER}" && PATH+=":${FONT_PATCHER}"
+  export $PATH
+  EOF
+  ```
+
+  ![font-patcher 3.2.1.1 auto completion](https://github.com/marslo/fonts/raw/main/screenshots/font-patcher-v3.2.1.1-auto-completion.png)
+
+- v3.2.1
+  ```bash
+  $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
+  $ curl -o /opt/FontPatcher/FontPatcher.zip \
+         -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip
+  $ unzip -o /opt/FontPatcher/FontPatcher.zip /opt/FontPatcher
+  ```
 
 ## patch fonts
 ### Operator
