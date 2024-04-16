@@ -143,5 +143,5 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 
 - list all installed fonts
   ```bash
-  $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o:
+  $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o: | sort -t: -k2
   ```
