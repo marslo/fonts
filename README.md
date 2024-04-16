@@ -40,18 +40,18 @@ $ unzip -o /opt/FontPatcher/FontPatcher.zip /opt/FontPatcher
 - Pro
 
   > TIPS
-  > - `OperatorPro-Book` -> `OperatoProNerdFont-Regular`
-  > - `OperatorPro-BookItalic` -> `OperatoProNerdFont-Italic`
+  > - `OperatorPro-Book` -> `OperatorProNerdFont-Regular`
+  > - `OperatorPro-BookItalic` -> `OperatorProNerdFont-Italic`
 
   ```bash
   $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Light.otf       -out Operator/OperatorProNF --complete --progressbars -ext ttf
   $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Light.otf       -out Operator/OperatorProNF --complete --progressbars -ext otf
   $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-LightItalic.otf -out Operator/OperatorProNF --complete --progressbars -ext ttf
   $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-LightItalic.otf -out Operator/OperatorProNF --complete --progressbars -ext otf
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operato Pro Book Nerd Font'
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operato Pro Book Nerd Font'
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operato Pro Book Italic Nerd Font'
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operato Pro Book Italic Nerd Font'
+  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operator Pro Book Nerd Font'
+  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operator Pro Book Nerd Font'
+  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operator Pro Book Italic Nerd Font'
+  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operator Pro Book Italic Nerd Font'
   ```
 
 ### Monaco
@@ -93,3 +93,40 @@ $ while read -r _f; do
     done;
   done < <(fd -u -tf -e ttf -e otf --full-path VictorMono/)
 ```
+
+## tips
+- list fonts properties
+  ```bash
+  $ fc-query /path/to/font.ttf
+  ```
+
+  - i.e.:
+    ```bash
+    $ fc-query Operator/OperatorMonoLigNF/OperatorMonoLigNerdFontMono-Light.ttf | grep -E 'family|style|fullname|weight|slant|spacing|file'
+      family: "OperatorMonoLig Nerd Font Mono"(s) "OperatorMonoLig Nerd Font Mono Light"(s)
+      familylang: "en"(s) "en"(s)
+      style: "Light"(s) "Regular"(s)
+      stylelang: "en"(s) "en"(s)
+      fullname: "OperatorMonoLig Nerd Font Mono Light"(s)
+      fullnamelang: "en"(s)
+      slant: 0(i)(s)
+      weight: 50(f)(s)
+      spacing: 100(i)(s)
+      file: "Operator/OperatorMonoLigNF/OperatorMonoLigNerdFontMono-Light.ttf"(s)
+    ```
+
+- list all installed fonts
+  ```bash
+  $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o:
+  ```
+
+  - i.e.:
+    ```bash
+    $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o: | grep operator | sort -t2
+    OperatorMonoLigNerdFontMono-Light.otf            : OperatorMonoLig Nerd Font Mono
+    OperatorMonoLigNerdFontMono-LightItalic.otf      : OperatorMonoLig Nerd Font Mono
+    OperatorMonoNerdFontMono-Light.ttf               : OperatorMono Nerd Font Mono
+    OperatorMonoNerdFontMono-LightItalic.ttf         : OperatorMono Nerd Font Mono
+    OperatorProNerdFont-Light.ttf                    : OperatorPro Nerd Font
+    OperatorProNerdFont-LightItalic.ttf              : OperatorPro Nerd Font
+    ```
