@@ -5,7 +5,9 @@
 - [patch fonts](#patch-fonts)
   - [Operator](#operator)
   - [Monaco](#monaco)
-  - [Recursive Code](#recursive-code)
+  - [Recursive](#recursive)
+  - [victor mono](#victor-mono)
+- [tips](#tips)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -29,6 +31,7 @@ $ unzip -o /opt/FontPatcher/FontPatcher.zip /opt/FontPatcher
   $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoNF --mono --complete --progressbars -ext ttf Operator/OperatorMono/OperatorMono-LightItalic.otf
   $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoNF --mono --complete --progressbars -ext otf Operator/OperatorMono/OperatorMono-LightItalic.otf
   ```
+
 - mono lig
   ```bash
   $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext ttf Operator/OperatorMonoLig/OperatorMonoLig-Light.otf
@@ -73,13 +76,22 @@ $ /opt/FontPatcher/font-patcher Monaco/monaco.ttf --mono --complete --progressba
     done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Code/)
   ```
 - desktop
+
+  > TIP:
+  > Recursive_Desktop requires setup `name` cause the original file using abbreviation for font family and fullname
+
   ```bash
   $ while read -r _f; do
-      outpath="$(dirname $_f)_NF";
+      outpath="$(dirname "${_f}")_NF";
+      fontfamily="$(fc-query -f '%{family}' "$(realpath "${_f}")" | awk -F, '{print $1}')";
+      style="$(fc-query -f '%{style}' "$(realpath "${_f}")")";
+      name="${fontfamily}";
+      if echo "${style}" | grep -i -q "italic"; then name+=" Italic"; fi
+      name+=" Nerd Font"
       for _e in otf ttf; do
         [[ -d "${outpath}/${_e}" ]] || mkdir -p "${outpath}/${_e}";
-        echo ".. ${_e} » $(basename ${_f}) » ${outpath}";
-        /opt/FontPatcher/font-patcher $(realpath "${_f}") --complete --quiet -ext ${_e} -out "${outpath}/${_e}"
+        echo ".. ${_e} » $(basename "${_f}") » ${outpath}";
+        /opt/FontPatcher/font-patcher "$(realpath "${_f}")" --complete --quiet -ext ${_e} -out "${outpath}/${_e}" --name "\"${name}\""
       done
     done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Desktop/)
   ```
@@ -113,6 +125,24 @@ $ while read -r _f; do
       weight: 50(f)(s)
       spacing: 100(i)(s)
       file: "Operator/OperatorMonoLigNF/OperatorMonoLigNerdFontMono-Light.ttf"(s)
+    ```
+
+- [list particular field of fonts properties](https://stackoverflow.com/a/43614521/2940319)
+  ```bash
+  $ fc-query -f '%{family}\n' /path/to/font.ttf
+  ```
+
+  - i.e.:
+    ```bash
+    $ fc-query -f '%{family}\n%{style}\n%{fullname}' Recursive/Recursive_Desktop/RecursiveSansCslSt-LtItalic.ttf
+    Recursive Sans Casual Static,Recursive Sn Csl St Lt
+    Light Italic,Italic
+    Recursive Sn Csl St Lt Italic
+
+    $ fc-query -f '%{family}\n%{style}\n%{fullname}' Recursive/Recursive_Desktop/RecursiveSansCslSt-LtItalic.ttf | awk -F, '{print $1}'
+    Recursive Sans Casual Static
+    Light Italic
+    Recursive Sn Csl St Lt Italic
     ```
 
 - list all installed fonts
