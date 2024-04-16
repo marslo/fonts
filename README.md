@@ -26,18 +26,18 @@ $ brew install fontforge
 
   ```
   $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
-  $ curl -o /opt/FontPatcher/FontPatcher.zip \
+  $ curl -o FontPatcher.zip \
          -fsSL https://github.com/marslo/fonts/raw/fonts/FontPatcher.v3.2.1.1.zip
-  $ unzip -o /opt/FontPatcher/FontPatcher.zip /opt/FontPatcher
+  $ unzip -o FontPatcher.zip /opt/FontPatcher
 
   # setup completion
   ## osx
-  $ cp /opt/FontPatcher/completion/font-patcher.sh /usr/local/etc/bash_completion.d/
+  $ cp completion/font-patcher.sh /usr/local/etc/bash_completion.d/
 
   ## centos/wsl
-  $ cp /opt/FontPatcher/completion/font-patcher.sh /usr/share/bash-completion/completions/
+  $ cp completion/font-patcher.sh /usr/share/bash-completion/completions/
   # or
-  $ cp /opt/FontPatcher/completion/font-patcher.sh /etc/bash_completion.d/
+  $ cp completion/font-patcher.sh /etc/bash_completion.d/
 
   # setup environment
   $ cat >> ~/.bashrc << EOF
@@ -52,27 +52,27 @@ $ brew install fontforge
 - v3.2.1
   ```bash
   $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
-  $ curl -o /opt/FontPatcher/FontPatcher.zip \
+  $ curl -o FontPatcher.zip \
          -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip
-  $ unzip -o /opt/FontPatcher/FontPatcher.zip /opt/FontPatcher
+  $ unzip -o FontPatcher.zip /opt/FontPatcher
   ```
 
 ## patch fonts
 ### Operator
 - mono
   ```bash
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoNF --mono --complete --progressbars -ext ttf Operator/OperatorMono/OperatorMono-Light.otf
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoNF --mono --complete --progressbars -ext otf Operator/OperatorMono/OperatorMono-Light.otf
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoNF --mono --complete --progressbars -ext ttf Operator/OperatorMono/OperatorMono-LightItalic.otf
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoNF --mono --complete --progressbars -ext otf Operator/OperatorMono/OperatorMono-LightItalic.otf
+  $ font-patcher Operator/OperatorMono/OperatorMono-Light.otf       -out Operator/OperatorMonoNF --mono --complete --progressbars -ext ttf 2>/dev/null
+  $ font-patcher Operator/OperatorMono/OperatorMono-Light.otf       -out Operator/OperatorMonoNF --mono --complete --progressbars -ext otf 2>/dev/null
+  $ font-patcher Operator/OperatorMono/OperatorMono-LightItalic.otf -out Operator/OperatorMonoNF --mono --complete --progressbars -ext ttf 2>/dev/null
+  $ font-patcher Operator/OperatorMono/OperatorMono-LightItalic.otf -out Operator/OperatorMonoNF --mono --complete --progressbars -ext otf 2>/dev/null
   ```
 
 - mono lig
   ```bash
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext ttf Operator/OperatorMonoLig/OperatorMonoLig-Light.otf
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext otf Operator/OperatorMonoLig/OperatorMonoLig-Light.otf
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext ttf Operator/OperatorMonoLig/OperatorMonoLig-LightItalic.otf
-  $ /opt/FontPatcher/font-patcher -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext otf Operator/OperatorMonoLig/OperatorMonoLig-LightItalic.otf
+  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-Light.otf       -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext ttf 2>/dev/null
+  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-Light.otf       -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext otf 2>/dev/null
+  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-LightItalic.otf -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext ttf 2>/dev/null
+  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-LightItalic.otf -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext otf 2>/dev/null
   ```
 
 - Pro
@@ -82,20 +82,20 @@ $ brew install fontforge
   > - `OperatorPro-BookItalic` -> `OperatorProNerdFont-Italic`
 
   ```bash
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Light.otf       -out Operator/OperatorProNF --complete --progressbars -ext ttf
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Light.otf       -out Operator/OperatorProNF --complete --progressbars -ext otf
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-LightItalic.otf -out Operator/OperatorProNF --complete --progressbars -ext ttf
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-LightItalic.otf -out Operator/OperatorProNF --complete --progressbars -ext otf
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operator Pro Book Nerd Font'
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operator Pro Book Nerd Font'
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operator Pro Book Italic Nerd Font'
-  $ /opt/FontPatcher/font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operator Pro Book Italic Nerd Font'
+  $ font-patcher Operator/OperatorPro/OperatorPro-Light.otf       -out Operator/OperatorProNF --complete --progressbars -ext ttf
+  $ font-patcher Operator/OperatorPro/OperatorPro-Light.otf       -out Operator/OperatorProNF --complete --progressbars -ext otf
+  $ font-patcher Operator/OperatorPro/OperatorPro-LightItalic.otf -out Operator/OperatorProNF --complete --progressbars -ext ttf
+  $ font-patcher Operator/OperatorPro/OperatorPro-LightItalic.otf -out Operator/OperatorProNF --complete --progressbars -ext otf
+  $ font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operator Pro Book Nerd Font'
+  $ font-patcher Operator/OperatorPro/OperatorPro-Book.otf        -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operator Pro Book Nerd Font'
+  $ font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext ttf --name 'Operator Pro Book Italic Nerd Font'
+  $ font-patcher Operator/OperatorPro/OperatorPro-BookItalic.otf  -out Operator/OperatorProNF --complete --progressbars -ext otf --name 'Operator Pro Book Italic Nerd Font'
   ```
 
 ### Monaco
 ```bash
-$ /opt/FontPatcher/font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext ttf
-$ /opt/FontPatcher/font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext otf
+$ font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext ttf
+$ font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext otf
 ```
 
 ### [Recursive](https://github.com/arrowtype/recursive)
@@ -106,7 +106,7 @@ $ /opt/FontPatcher/font-patcher Monaco/monaco.ttf --mono --complete --progressba
       [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
       for _e in otf ttf; do
         echo ".. ${_e} » $(basename ${_f}) » ${outpath}";
-        /opt/FontPatcher/font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out "${outpath}";
+        font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out "${outpath}";
       done;
     done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Code/)
   ```
@@ -126,7 +126,7 @@ $ /opt/FontPatcher/font-patcher Monaco/monaco.ttf --mono --complete --progressba
       for _e in otf ttf; do
         [[ -d "${outpath}/${_e}" ]] || mkdir -p "${outpath}/${_e}";
         echo ".. ${_e} » $(basename "${_f}") » ${outpath}";
-        /opt/FontPatcher/font-patcher "$(realpath "${_f}")" --complete --quiet -ext ${_e} -out "${outpath}/${_e}" --name "\"${name}\""
+        font-patcher "$(realpath "${_f}")" --complete --quiet -ext ${_e} -out "${outpath}/${_e}" --name "\"${name}\""
       done
     done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Desktop/)
   ```
@@ -136,7 +136,7 @@ $ /opt/FontPatcher/font-patcher Monaco/monaco.ttf --mono --complete --progressba
 $ while read -r _f; do
     for _e in otf ttf; do
       echo ".. ${_e} >> $(basename ${_f})";
-      /opt/FontPatcher/font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out ../VictorMonoNF/$(dirname "${_f}");
+      font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out ../VictorMonoNF/$(dirname "${_f}");
     done;
   done < <(fd -u -tf -e ttf -e otf --full-path VictorMono/)
 ```
