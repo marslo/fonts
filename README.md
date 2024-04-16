@@ -2,11 +2,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [setup](#setup)
+  - [font-patcher](#font-patcher)
 - [patch fonts](#patch-fonts)
   - [Operator](#operator)
   - [Monaco](#monaco)
   - [Recursive](#recursive)
   - [victor mono](#victor-mono)
+  - [monofur](#monofur)
 - [tips](#tips)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -139,6 +141,12 @@ $ while read -r _f; do
       font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out ../VictorMonoNF/$(dirname "${_f}");
     done;
   done < <(fd -u -tf -e ttf -e otf --full-path VictorMono/)
+```
+
+### monofur
+```bash
+$ font-patcher ./monofur/monofur.ttf        --mono --complete --progressbars --extension ttf --outputdir ./monofur --name "monofur Regular Nerd Font" 2>/dev/null
+$ font-patcher ./monofur/monofur-italic.ttf --mono --complete --progressbars --extension ttf --outputdir ./monofur --name "monofur Italic Nerd Font"  2>/dev/null
 ```
 
 ## tips

@@ -18,6 +18,24 @@ function patchRecursiveDesktop() {
   done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Desktop/)
 }
 
+function patchSans() {
+  path="$1"
+  while read -r _f; do
+    outpath="$(dirname "${_f}")";
+    echo ".. clean up Nerd Fonts .."
+    rm -rf "${outpath}/*NerdFonts*"
+    echo ".. build $(basename "${_f}") » ${outpath}";
+    command "${FONT_PATCHER}" "$(realpath "${_f}")" --complete --quiet -out "${outpath}" 2>/dev/null;
+  done < <(fd -u -tf -e ttf -e otf --full-path "${path}")
+}
+
+# mono
 patchRecursiveDesktop
+
+# sans
+patchSans ./Grandstander/
+patchSans ./Titillium
+patchSans ./Candara
+patchSans ./Gisha
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh
