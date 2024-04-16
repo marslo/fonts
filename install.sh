@@ -11,7 +11,7 @@ yes | cp Recursive/*_Desktop_NF/*/*SansCasual*NerdFont-*.ttf "${fontPath}"
 yes | cp Operator/*ProNF/*NerdFont*.ttf "${fontPath}"
 
 # mono
-yes | cp {Monaco,monofur,VictorMono}/*NerdFont* "${fontPath}"
+yes | cp {Monaco,monofur,VictorMono,ComicMono}/*NerdFont*.ttf "${fontPath}"
 yes | cp Operator/*Mono*NF/*NerdFont*.ttf "${fontPath}"
 yes | cp Recursive/Recursive_Code_NF/RecMonoCasual/*NerdFont*.ttf "${fontPath}"
 

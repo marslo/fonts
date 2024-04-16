@@ -20,8 +20,10 @@ function patchRecursiveDesktop() {
 
 function patchSans() {
   path="$1"
-  echo ".. clean up Nerd Fonts .."
-  rm -rf "${path}/*NerdFont*"
+  if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
+    echo ".. clean up Nerd Fonts .."
+    rm -rfv "${path}"/*NerdFont*
+  fi
   while read -r _f; do
     outpath="$(dirname "${_f}")";
     echo ".. build $(basename "${_f}") » ${outpath}";
@@ -31,8 +33,10 @@ function patchSans() {
 
 function patchMono() {
   path="$1"
-  echo ".. clean up Nerd Fonts .."
-  rm -rf "${path}/*NerdFont*"
+  if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
+    echo ".. clean up Nerd Fonts .."
+    rm -rfv "${path}"/*NerdFont*
+  fi
   while read -r _f; do
     outpath="$(dirname "${_f}")";
     for _e in otf ttf; do
@@ -45,6 +49,7 @@ function patchMono() {
 # mono
 patchRecursiveDesktop
 patchMono ./VictorMono
+patchMono ./ComicMono
 
 # sans
 patchSans ./Grandstander

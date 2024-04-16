@@ -195,12 +195,12 @@ $ font-patcher ./monofur/monofur-italic.ttf --mono --complete --progressbars --e
 
 - list all installed fonts
   ```bash
-  $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o:
+  $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o: | sort -t: -k2
   ```
 
   - i.e.:
     ```bash
-    $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o: | grep operator | sort -t2
+    $ fc-list | sed -re 's/^.+\/([^:]+):\s?([^,:]+),?:?.*$/\1 : \2/g' | column -t -s: -o: | sort -t: -k2 | grep operator
     OperatorMonoLigNerdFontMono-Light.otf            : OperatorMonoLig Nerd Font Mono
     OperatorMonoLigNerdFontMono-LightItalic.otf      : OperatorMonoLig Nerd Font Mono
     OperatorMonoNerdFontMono-Light.ttf               : OperatorMono Nerd Font Mono
