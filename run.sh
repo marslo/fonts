@@ -54,5 +54,6 @@ patchSans ./Gisha
 
 # handwriting
 patchSans ./Papyrus
+patchSans ./segoe-print
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh
