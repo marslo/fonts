@@ -9,6 +9,7 @@
   - [Recursive](#recursive)
   - [victor mono](#victor-mono)
   - [monofur](#monofur)
+  - [functions](#functions)
 - [tips](#tips)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -21,7 +22,7 @@ $ brew install fontforge
 ### font-patcher
 - v3.2.1.1
 
-  > [!NOTE|label:updates in v3.2.1.1]
+  > *updates for `v3.2.1.1`*
   > - extended the length limitation 100 ( was 31 )
   > - fixed the `SyntaxWarning: invalid escape sequence '\='`
   > - add command-line completion for font-patcher
@@ -138,7 +139,7 @@ $ font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext otf
 $ while read -r _f; do
     for _e in otf ttf; do
       echo ".. ${_e} >> $(basename ${_f})";
-      font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out ../VictorMonoNF/$(dirname "${_f}");
+      font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out ../VictorMono;
     done;
   done < <(fd -u -tf -e ttf -e otf --full-path VictorMono/)
 ```
@@ -148,6 +149,10 @@ $ while read -r _f; do
 $ font-patcher ./monofur/monofur.ttf        --mono --complete --progressbars --extension ttf --outputdir ./monofur --name "monofur Regular Nerd Font" 2>/dev/null
 $ font-patcher ./monofur/monofur-italic.ttf --mono --complete --progressbars --extension ttf --outputdir ./monofur --name "monofur Italic Nerd Font"  2>/dev/null
 ```
+
+### functions
+- [patchSans](./run.sh#L21-L30)
+- [patchMono](./run.sh#L32-L43)
 
 ## tips
 - list fonts properties
