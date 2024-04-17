@@ -2,16 +2,7 @@
 
 - devicons:
 
-  ![devicons](./screenshots/devicons.png)
-
-- original font
-
-  ![Rec Mono Causual](./screenshots/RecMonoCasual.png)
-
-- patched via Nerd Fonts
-
-  ![RecMonoCausal Nerd Font Mono](./screenshots/RecMonoCasualNF.png)
-
+  ![devicons](./screenshots/devicons-1.png)
 
 ## install patched fonts
 
@@ -21,7 +12,7 @@
 >   - `linux`: `~/.local/share/fonts`
 
 ### Operator
-- mono
+- OperatorMono Nerd Font Mono
   ```bash
   $ curl --create-dirs -O --output-dir "${fontsPath}" \
          -fsSL --remote-name-all \
@@ -29,7 +20,9 @@
          https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMono/OperatorMono-LightItalic.otf
   ```
 
-- mono lig
+  ![OperatorMonoNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNFM-Light.png)
+
+- OperatorMonoLig Nerd Font Mono
   ```bash
   $ ext='otf'             # or ext='ttf'
   $ curl --create-dirs -O --output-dir "${fontsPath}" \
@@ -38,7 +31,22 @@
          https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/"${ext}"/OperatorMonoLigNerdFontMono-LightItalic."${ext}"
   ```
 
-- Pro
+  ![OperatorMonoLigNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNFM-Light.png)
+
+- OperatorMonoSSmLig Nerd Font Mono
+  ```bash
+  $ ext='otf'             # or ext='ttf'
+  $ curl --create-dirs -O --output-dir "${fontsPath}" \
+         -fsSL --remote-name-all \
+         https://github.com/marslo/fonts/blob/fonts/Operator/OperatorMonoSSmLigNF/"${ext}"/OperatorMonoSSmLigNerdFontMono-Regular."${ext}" \
+         https://github.com/marslo/fonts/blob/fonts/Operator/OperatorMonoSSmLigNF/"${ext}"/OperatorMonoSSmLigNerdFontMono-Italic."${ext}" \
+         https://github.com/marslo/fonts/blob/fonts/Operator/OperatorMonoSSmLigNF/"${ext}"/OperatorMonoSSmLigNerdFontMono-Light."${ext}" \
+         https://github.com/marslo/fonts/blob/fonts/Operator/OperatorMonoSSmLigNF/"${ext}"/OperatorMonoSSmLigNerdFontMono-LightItalic."${ext}"
+  ```
+
+  ![OperatorMonoSSmLigNFM-Light](https://github.com/marslo/fonts/blob/fonts/Operator/OperatorMonoSSmLigNFM-Light.png)
+
+- Operator Pro Nerd Font
 
   > TIPS
   > - `OperatorPro-Book` -> `OperatorProNerdFont-Regular`
@@ -54,7 +62,7 @@
          https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/OperatorProNerdFont-LightItalic."${ext}"
   ```
 
-### Monaco
+### Monaco Nerd Font Mono
 ```bash
 $ ext='otf'             # or ext='ttf'
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
@@ -62,8 +70,11 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNerdFontMono-Regular."${ext}"
 ```
 
+![MonacoNFM](https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNFM.png)
+
 ### [Recursive](https://github.com/arrowtype/recursive)
-- code
+
+- Mono
 
   > support ttf and otf
 
@@ -101,6 +112,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
          https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-BoldItalic.otf
   ```
 
+  ![RecMonoCasualNFM](https://github.com/marslo/fonts/raw/fonts/Recursive/RecMonoCasualNFM.png)
+
 - desktop
   ```bash
   $ ext='otf'             # or ext='ttf'
@@ -122,13 +135,43 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
          https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/"${ext}"/RecursiveSansLinearStaticNerdFont-LightItalic."${ext}"
   ```
 
-### victor mono
+### VictorMono Nerd Font Mono
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
        https://github.com/marslo/fonts/raw/fonts/VictorMono/VictorMono-Light.ttf \
        https://github.com/marslo/fonts/raw/fonts/VictorMono/VictorMono-LightItalic.ttf
 ```
+
+![VictorMonoNFM-Light](https://github.com/marslo/fonts/raw/fonts/VictorMono/VictorMonoNFM-Light.png)
+
+### ComicMono Nerd Font Mono
+```bash
+$ curl --create-dirs -O --output-dir "${fontsPath}" \
+       -fsSL --remote-name-all \
+       https://github.com/marslo/fonts/blob/fonts/ComicMono/ComicMonoNerdFontMono-Regular.otf \
+       https://github.com/marslo/fonts/blob/fonts/ComicMono/ComicMonoNerdFontMono-Bold.otf
+```
+
+![ComicMonoNFM](https://github.com/marslo/fonts/blob/fonts/ComicMono/ComicMonoNFM.png)
+
+### Monofur Nerd Font Mono
+```bash
+$ curl --create-dirs -O --output-dir "${fontsPath}" \
+       -fsSL --remote-name-all \
+       https://github.com/marslo/fonts/raw/fonts/monofur/MonofurNerdFontMono-Regular.ttf \
+       https://github.com/marslo/fonts/raw/fonts/monofur/MonofurNerdFontMono-Italic.ttf
+```
+
+![MonofurNFM](https://github.com/marslo/fonts/raw/fonts/monofur/MonofurNFM.png)
+
+### Menlo Nerd Font Mono
+```bash
+$ curl --create-dirs -O --output-dir "${fontsPath}" -fsSL \
+       https://github.com/marslo/fonts/raw/fonts/menlo/MenloNerdFontMono-Regular.otf
+```
+
+![MenloNFM-Regular](https://github.com/marslo/fonts/raw/fonts/menlo/MenloNFM-Regular.png)
 
 ## tips
 - list fonts properties
@@ -139,6 +182,11 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 - [list particular field of fonts properties](https://stackoverflow.com/a/43614521/2940319)
   ```bash
   $ fc-query -f '%{family}\n' /path/to/font.ttf
+
+  # shwo `guifont` value for nvim/vim
+  $ fc-query -f '%{family}\n%{postscriptname}' ~/Library/Fonts/OperatorMonoSSmLigNerdFontMono-Light.otf | awk -F, '{print $NF}'
+  OperatorMonoSSmLig Nerd Font Mono Light
+  OperatorMonoSSmLigNFM-Light
   ```
 
 - list all installed fonts
