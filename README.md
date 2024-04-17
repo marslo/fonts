@@ -1,9 +1,14 @@
+<h2>!! The project is only for learning records, NOT for any commercial use !!</h2>
+
+---
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [setup](#setup)
-  - [font-patcher](#font-patcher)
-- [patch fonts](#patch-fonts)
+- [environment setup](#environment-setup)
+  - [`font-patcher` for Nerd Font](#font-patcher-for-nerd-font)
+  - [`fonttools` for Operator Mono Lig](#fonttools-for-operator-mono-lig)
+- [patch nerd fonts](#patch-nerd-fonts)
   - [Operator](#operator)
   - [Monaco](#monaco)
   - [Recursive](#recursive)
@@ -14,53 +19,88 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## setup
+## environment setup
+### `font-patcher` for Nerd Font
 ```bash
 $ brew install fontforge
 ```
 
-### font-patcher
-- v3.2.1.1
-
-  > *updates for `v3.2.1.1`*
-  > - extended the length limitation 100 ( was 31 )
-  > - fixed the `SyntaxWarning: invalid escape sequence '\='`
-  > - add command-line completion for font-patcher
+- font-patcher [v3.2.1.1](https://github.com/marslo/fonts/releases/tag/v3.2.1.1) | [changelog](https://github.com/marslo/fonts/releases/tag/untagged-46572d85c7f7bd03c993)
 
   ```
   $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
-  $ curl -o FontPatcher.zip \
-         -fsSL https://github.com/marslo/fonts/raw/fonts/FontPatcher.v3.2.1.1.zip
-  $ unzip -o FontPatcher.zip /opt/FontPatcher
 
-  # setup completion
-  ## osx
+  # download v3.2.1.1
+  $ curl -o FontPatcher.zip \
+         -fsSL https://github.com/marslo/fonts/releases/download/v3.2.1.1/FontPatcher.v3.2.1.1.zip
+  $ unzip -o FontPatcher.zip /opt/FontPatcher
+  ## or download and extract in one-line command, `bsdtar` is required
+  $ curl -fsSL https://github.com/marslo/fonts/releases/download/v3.2.1.1/FontPatcher.v3.2.1.1.zip |
+    bsdtar xzf - -C /opt/FontPatcher
+  ## or via clone
+  $ git clone --branch v3.2.1.1 https://github.com/marslo/fonts.git /opt/FontPatcher
+
+  # environment variable to make `font-patcher` as system command line
+  $ echo "test -d '/opt/FontPatcher' && export PATH=\"\$PATH:/opt/FontPatcher\"" >> ~/.bashrc
+  ```
+
+- setup auto completion
+  ```bash
+  # osx
   $ cp completion/font-patcher.sh /usr/local/etc/bash_completion.d/
 
-  ## centos/wsl
+  # ubuntu/centos/wsl
   $ cp completion/font-patcher.sh /usr/share/bash-completion/completions/
   # or
   $ cp completion/font-patcher.sh /etc/bash_completion.d/
-
-  # setup environment
-  $ cat >> ~/.bashrc << EOF
-  FONT_PATCHER='/opt/FontPatcher'
-  test -d "${FONT_PATCHER}" && PATH+=":${FONT_PATCHER}"
-  export $PATH
-  EOF
   ```
 
   ![font-patcher 3.2.1.1 auto completion](https://github.com/marslo/fonts/raw/main/screenshots/font-patcher-v3.2.1.1-auto-completion.png)
 
-- v3.2.1
+- [v3.2.1](https://github.com/ryanoasis/nerd-fonts/tree/v3.2.1) | [changelog](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.2.1)
   ```bash
   $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
   $ curl -o FontPatcher.zip \
          -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip
   $ unzip -o FontPatcher.zip /opt/FontPatcher
+
+  # or
+  $ curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip |
+    bsdtar xzf - -C /opt/FontPatcher
   ```
 
-## patch fonts
+### `fonttools` for [Operator Mono Lig](https://github.com/kiliman/operator-mono-lig)
+
+- install fonttools
+  ```bash
+  # osx
+  $ brew install fonttools
+  # ubuntu
+  $ sudo apt install fonttools
+  # others
+  $ python3 -m pip install fonttools
+  ```
+
+- patch Operator Momo Lig
+  ```bash
+  # download repo
+  $ git clone git@github.com:kiliman/operator-mono-lig.git /opt/operator-mono-lig
+  # or
+  $ curl -fsSL https://github.com/kiliman/operator-mono-lig/archive/refs/tags/v2.5.2.tar.gz| tar xzf - -C /opt/operator-mono-lig
+
+  # copy fonts into `original` folder
+  $ cp OperatorMono*.otf /opt/operator-mono-lig/original
+  $ cd /opt/operator-mono-lig
+
+  # build ligature fonts
+  $ npm install
+  $ ./build.sh                  # linux
+  $ build                       # windows
+
+  # check fonts in `build` folder
+  ```
+
+## patch nerd fonts
 ### Operator
 - mono
   ```bash
@@ -153,6 +193,7 @@ $ font-patcher ./monofur/monofur-italic.ttf --mono --complete --progressbars --e
 ### functions
 - [patchSans](./run.sh#L21-L30)
 - [patchMono](./run.sh#L32-L43)
+
 
 ## tips
 - list fonts properties
