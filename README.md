@@ -34,8 +34,8 @@
   $ ext='otf'             # or ext='ttf'
   $ curl --create-dirs -O --output-dir "${fontsPath}" \
          -fsSL --remote-name-all \
-         https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/OperatorMonoLigNerdFontMono-Light."${ext}" \
-         https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/OperatorMonoLigNerdFontMono-LightItalic."${ext}"
+         https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/"${ext}"/OperatorMonoLigNerdFontMono-Light."${ext}" \
+         https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/"${ext}"/OperatorMonoLigNerdFontMono-LightItalic."${ext}"
   ```
 
 - Pro
