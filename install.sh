@@ -7,13 +7,14 @@ fontPath="$HOME/Library/Fonts"
 
 # sans
 yes | cp {Candara,Gisha,Titillium,Grandstander}/*NerdFont* "${fontPath}"
-yes | cp Recursive/*_Desktop_NF/*/*SansCasual*NerdFont-*.ttf "${fontPath}"
-yes | cp Operator/*ProNF/*NerdFont*.ttf "${fontPath}"
+yes | cp Recursive/*_Desktop_NF/*/*SansCasual*NerdFont-*.otf "${fontPath}"
+yes | cp Operator/*ProNF/*NerdFont*.otf "${fontPath}"
 
 # mono
-yes | cp {Monaco,monofur,VictorMono,ComicMono}/*NerdFont*.ttf "${fontPath}"
-yes | cp Operator/*Mono*NF/*NerdFont*.ttf "${fontPath}"
-yes | cp Recursive/Recursive_Code_NF/RecMonoCasual/*NerdFont*.ttf "${fontPath}"
+yes | cp monofur/*NerdFont*.ttf "${fontPath}"
+yes | cp {Monaco,monofur,VictorMono,ComicMono}/*NerdFont*.otf "${fontPath}"
+yes | cp Operator/*Mono*NF/otf/*.otf "${fontPath}"
+yes | cp Recursive/Recursive_Code_NF/RecMonoCasual/*NerdFont*.otf "${fontPath}"
 
 # handwriting
 yes | cp segoe-print/*NerdFont* "${fontPath}"
