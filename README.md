@@ -103,19 +103,22 @@ $ brew install fontforge
 ## patch nerd fonts
 ### Operator
 - mono
-  ```bash
-  $ font-patcher Operator/OperatorMono/OperatorMono-Light.otf       -out Operator/OperatorMonoNF --mono --complete --progressbars -ext ttf 2>/dev/null
-  $ font-patcher Operator/OperatorMono/OperatorMono-Light.otf       -out Operator/OperatorMonoNF --mono --complete --progressbars -ext otf 2>/dev/null
-  $ font-patcher Operator/OperatorMono/OperatorMono-LightItalic.otf -out Operator/OperatorMonoNF --mono --complete --progressbars -ext ttf 2>/dev/null
-  $ font-patcher Operator/OperatorMono/OperatorMono-LightItalic.otf -out Operator/OperatorMonoNF --mono --complete --progressbars -ext otf 2>/dev/null
-  ```
 
-- mono lig
   ```bash
-  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-Light.otf       -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext ttf 2>/dev/null
-  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-Light.otf       -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext otf 2>/dev/null
-  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-LightItalic.otf -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext ttf 2>/dev/null
-  $ font-patcher Operator/OperatorMonoLig/OperatorMonoLig-LightItalic.otf -out Operator/OperatorMonoLigNF --mono --complete --progressbars -ext otf 2>/dev/null
+  $ while read -r _f; do
+      for _e in otf ttf; do
+        outpath="$(dirname "${_f}")NF/${_e}";
+        [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
+        echo ".. ${_e} » $(basename ${_f}) » ${outpath}";
+        font-patcher "$(realpath "${_f}")" \
+                     --mono --complete --careful --quiet \
+                     -ext "${_e}" -out "${outpath}" 2>/dev/null;
+      done
+    done < <(fd . Operator/OperatorMono \
+                  Operator/OperatorMonoLig \
+                  Operator/OperatorMonoSSmLig \
+                  -tf -e ttf -e otf
+            )
   ```
 
 - Pro
@@ -136,9 +139,22 @@ $ brew install fontforge
   ```
 
 ### Monaco
+
+> the Ligature version of Monaco originally from [thep0y/monaco-nerd-font](https://github.com/thep0y/monaco-nerd-font)
+> <p>
+> the `MonacoLigNF` and `MonacoLig` are all not supported in iTerm2 v3.4.23
+
 ```bash
-$ font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext ttf
-$ font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext otf
+$ while read -r _f; do
+    for _e in otf ttf; do
+      outpath="$(dirname "${_f}")NF/${_e}";
+      [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
+      echo ".. ${_e} » $(basename ${_f}) » ${outpath}";
+      font-patcher "$(realpath ${_f}")"  \
+                   --mono --complete --careful --quiet \
+                   -ext "${_e}" -out "${outpath}" 2>/dev/null";
+    done
+  done < <(fd -u -tf -e ttf -e otf --full-path ./Monaco)
 ```
 
 ### [Recursive](https://github.com/arrowtype/recursive)
@@ -153,6 +169,7 @@ $ font-patcher Monaco/monaco.ttf --mono --complete --progressbars -ext otf
       done;
     done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Code/)
   ```
+
 - desktop
 
   > TIP:
@@ -191,9 +208,8 @@ $ font-patcher ./monofur/monofur-italic.ttf --mono --complete --progressbars --e
 ```
 
 ### functions
-- [patchSans](./run.sh#L21-L30)
-- [patchMono](./run.sh#L32-L43)
-
+- [patchSans](./build.sh#L75-L85)
+- [patchMono](./build.sh#L88-L101)
 
 ## tips
 - list fonts properties

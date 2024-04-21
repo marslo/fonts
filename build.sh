@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # shellcheck source=/dev/null disable=SC2155,SC1079,SC1078
 
+# credit belongs to https://github.com/ppo/bash-colors/blob/master/bash-colors.sh
+# colorizing the output
 source ~/.marslo/bin/bash-color.sh
 set -euo pipefail
 
@@ -10,11 +12,14 @@ declare -r MONO_OPTIONS="--mono ${OPTIONS}"
 
 function message() {
   if [[ 1 -eq "$#" ]]; then
-    msg="clean up Nerd Fonts $(c Rsi)$(c)"
+    command -v c >/dev/null && msg="$(c Rsi)$1$(c)" || msg="$1"
+    msg="clean up Nerd Fonts ${msg}"
   elif [[ 2 -eq "$#" ]]; then
-    msg="building $(c Gi)$1$(c) » $(c Ys)$2$(c)"
+    command -v c >/dev/null && msg="$(c Gi)$1$(c) » $(c Ys)$2$(c)" || msg="$1 » $2"
+    msg="building ${msg}"
   elif [[ 3 -eq "$#" ]]; then
-    msg="building $(c Ms)$1$(c) » $(c Gi)$2$(c) » $(c Ys)$3$(c)"
+    command -v c >/dev/null && msg="$(c Ms)$1$(c) » $(c Gi)$2$(c) » $(c Ys)$3$(c)" || msg="$1 » $2 » $3"
+    msg="building ${msg}"
   fi
   echo -e "\n.. ${msg}"
 }
