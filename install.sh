@@ -3,21 +3,36 @@
 
 set -euo pipefail
 
-fontPath="$HOME/Library/Fonts"
+function isWSL()   { [[ -f /proc/version ]] && grep -qEi "(Microsoft|WSL)" /proc/version; }
+function isLinux() { ! isWSL && [[ "$(uname)" == "Linux" ]]; }
+function isOSX()   { [[ "$(uname)" == "Darwin" ]]; }
+
+if isOSX; then
+  fontPath="$HOME/Library/Fonts"
+elif isLinux; then
+  fontPath="$HOME/.local/share/fonts"
+else
+  echo "Unsupported OS $(uname)"
+  exit 1
+fi
 
 # sans
-yes | cp {Candara,Gisha,Titillium,Grandstander}/*NerdFont* "${fontPath}"
-yes | cp Recursive/*_Desktop_NF/*/*SansCasual*NerdFont-*.otf "${fontPath}"
-yes | cp Operator/*ProNF/*NerdFont*.otf "${fontPath}"
+cp -f Candara/*NerdFont* "${fontPath}"
+cp -f Gisha/*NerdFont* "${fontPath}"
+cp -f Titillium/*NerdFont* "${fontPath}"
+cp -f Grandstander/*NerdFont* "${fontPath}"
+cp -f Recursive/*_Desktop_NF/*/*SansCasual*NerdFont-*.otf "${fontPath}"
+cp -f Operator/*ProNF/*NerdFont*.otf "${fontPath}"
 
 # mono
-yes | cp monofur/*NerdFont*.ttf "${fontPath}"
-yes | cp {Monaco,monofur,VictorMono,ComicMono}/*NerdFont*.otf "${fontPath}"
-yes | cp Operator/*Mono*NF/otf/*.otf "${fontPath}"
-yes | cp Recursive/Recursive_Code_NF/RecMonoCasual/*NerdFont*.otf "${fontPath}"
+cp -f {VictorMono,ComicMono}/*NerdFont*.otf "${fontPath}"
+cp -f monofur/*NerdFont*.ttf "${fontPath}"
+cp -f Monaco/*NF/otf/*.otf "${fontPath}"
+cp -f Operator/*Mono*NF/otf/*.otf "${fontPath}"
+cp -f Recursive/Recursive_Code_NF/RecMonoCasual/*NerdFont*.otf "${fontPath}"
 
 # handwriting
-yes | cp segoe-print/*NerdFont* "${fontPath}"
-yes | cp Papyrus/*NerdFont* "${fontPath}"
+cp -f segoe-print/*NerdFont* "${fontPath}"
+cp -f Papyrus/*NerdFont* "${fontPath}"
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh
