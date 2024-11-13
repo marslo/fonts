@@ -1,3 +1,3 @@
 
 > [!NOTE]
-> - original fonts can be download from : https://font.download/font/titillium
+> - original fonts can be download from [font.download](https://font.download/font/titillium)
