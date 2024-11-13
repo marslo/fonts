@@ -105,6 +105,8 @@ patchMonaco
 patchOperatorMono
 patchMono ./VictorMono
 patchMono ./ComicMono
+patchMono ./audiolink/console
+patchMono ./audiolink/mono
 
 # sans
 patchRecursiveDesktop
