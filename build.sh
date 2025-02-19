@@ -11,6 +11,7 @@ declare -r OPTIONS='--complete --careful --quiet'
 declare -r MONO_OPTIONS="--mono ${OPTIONS}"
 
 function message() {
+  local msg=''
   if [[ 1 -eq "$#" ]]; then
     command -v c >/dev/null && msg="$(c Rsi)$1$(c)" || msg="$1"
     msg="clean up Nerd Fonts ${msg}"
@@ -21,7 +22,7 @@ function message() {
     command -v c >/dev/null && msg="$(c Ms)$1$(c) » $(c Gi)$2$(c) » $(c Ys)$3$(c)" || msg="$1 » $2 » $3"
     msg="building ${msg}"
   fi
-  echo -e "\n.. ${msg}"
+  printf "\n.. %b\n" "${msg}"
 }
 
 function patchRecursiveDesktop() {
@@ -107,6 +108,7 @@ patchMono ./VictorMono
 patchMono ./ComicMono
 patchMono ./audiolink/console
 patchMono ./audiolink/mono
+patchMono ./monaspace/radon
 
 # sans
 patchRecursiveDesktop
