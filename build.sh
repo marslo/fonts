@@ -116,6 +116,7 @@ patchSans ./Grandstander
 patchSans ./Titillium
 patchSans ./Candara
 patchSans ./Gisha
+patchSans ./NotoSansSC
 
 # handwriting
 patchSans ./Papyrus
