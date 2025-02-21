@@ -101,6 +101,9 @@ $ brew install fontforge
   ```
 
 ## patch nerd fonts
+
+[![build.sh](https://github.com/marslo/fonts/raw/main/screenshots/font-build.sh--help.png)](https://github.com/marslo/fonts/raw/fonts/build.sh)
+
 ### Operator
 - mono
 
