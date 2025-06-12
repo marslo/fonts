@@ -34,7 +34,7 @@
 
 # install patched fonts
 
-> TIPS:
+> [!TIP]
 > - `fontsPath`:
 >   - `osx`: `~/Library/Fonts`
 >   - `linux`: `~/.local/share/fonts`
@@ -42,51 +42,82 @@
 ## Operator
 ### OperatorMono Nerd Font Mono
 
-> TIPS:<p>
-> support both `otf` and `ttf`
+> [!TIP]
+> support both `otf` and `ttf`:
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/<NAME>.otf`
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/ttf/<NAME>.ttf`
 
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Bold.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-BoldItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-ExtraLight.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-ExtraLightItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Italic.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Light.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-LightItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-LightItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Medium.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-MediumItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Regular.otf
 ```
 
 ![OperatorMonoNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNFM-Light.png)
 
 ### OperatorMonoLig Nerd Font Mono
 
-> TIPS:<p>
+> [!TIP]
 > support both `otf` and `ttf`
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/<NAME>.otf`
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/ttf/<NAME>.ttf`
+> - or
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/<NAME>.otf`
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/ttf/<NAME>.ttf`
 
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-Italic.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-Light.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-LightItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-LightItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-Regular.otf
+
+# or ligatures without less-slash ( `</` )
+$ curl --create-dirs -O --output-dir "${fontsPath}" \
+       -fsSL --remote-name-all \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-Italic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-Light.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-LightItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-Regular.otf
 ```
 
 ![OperatorMonoLigNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNFM-Light.png)
 
 ### OperatorMonoSSmLig Nerd Font Mono
 
-> TIPS:<p>
+> [!TIP]
 > support both `otf` and `ttf`
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/<NAME>.otf`
+>> - `https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/ttf/<NAME>.ttf`
 
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Light.otf   \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-LightItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Bold.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-BoldItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Italic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Light.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-LightItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Medium.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-MediumItalic.otf \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Regular.otf
 ```
 
 ![OperatorMonoSSmLigNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNFM-Light.png)
 
 ### Operator Pro Nerd Font
 
-> TIPS:<p>
+> [!TIP]
 > - `OperatorPro-Book` -> `OperatorProNerdFont-Regular`
 > - `OperatorPro-BookItalic` -> `OperatorProNerdFont-Italic`
 
@@ -94,55 +125,63 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 $ ext='otf'             # or ext='ttf'
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/OperatorProNerdFont-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/OperatorProNerdFont-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/OperatorProNerdFont-Light.otf   \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/OperatorProNerdFont-LightItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-Black.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-BlackItalic.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-Bold.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-BoldItalic.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-Italic.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-Light.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-LightItalic.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-Medium.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-MediumItalic.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-Regular.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProXNerdFont-Light.${ext} \
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProXNerdFont-LightItalic.${ext}
 ```
 
 ## [Recursive](https://github.com/arrowtype/recursive)
 
-> TIPS:<p>
+> [!TIP]
 > support both `otf` and `ttf`
 
 ### RecMonoCasual Nerd Font Mono
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoCasual/RecMonoCasualNerdFontMono-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoCasual/RecMonoCasualNerdFontMono-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoCasual/RecMonoCasualNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoCasual/RecMonoCasualNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-Regular.otf \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-Italic.otf  \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-Bold.otf    \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-BoldItalic.otf
 ```
 
 ### RecMonoLinear Nerd Font Mono
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoLinear/RecMonoLinearNerdFontMono-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoLinear/RecMonoLinearNerdFontMono-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoLinear/RecMonoLinearNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoLinear/RecMonoLinearNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-Regular.otf \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-Italic.otf  \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-Bold.otf    \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-BoldItalic.otf
 ```
 
 ### RecMonoSmCasual Nerd Font Mono
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Regular.otf \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Italic.otf  \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Bold.otf    \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-BoldItalic.otf
 ```
 
 ### RecMonoDuotone Nerd Font Mono
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Code_NF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Regular.otf \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Italic.otf  \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Bold.otf    \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-BoldItalic.otf
 ```
 
 ![RecMonoCasualNFM](https://github.com/marslo/fonts/raw/fonts/Recursive/RecMonoCasualNFM.png)
@@ -151,10 +190,10 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansCasualStaticNerdFont-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansCasualStaticNerdFont-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansCasualStaticNerdFont-Light.otf   \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansCasualStaticNerdFont-LightItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-Regular.otf \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-Italic.otf  \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-Light.otf   \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-LightItalic.otf
 
 ```
 
@@ -162,15 +201,15 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansLinearStaticNerdFont-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansLinearStaticNerdFont-Italic.otf  \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansLinearStaticNerdFont-Light.otf   \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/Recursive_Desktop_NF/otf/RecursiveSansLinearStaticNerdFont-LightItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-Regular.otf \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-Italic.otf  \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-Light.otf   \
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-LightItalic.otf
 ```
 
 ## Monaco Nerd Font Mono
 
-> TIPS:<p>
+> [!TIP]
 > - support both `otf` and `ttf`
 > - MonacoLigaturized not support for iTerm2 ( not sure why )
 
