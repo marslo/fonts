@@ -47,7 +47,7 @@ $ brew install fontforge
 - setup auto completion
   ```bash
   # osx
-  $ cp completion/font-patcher.sh /usr/local/etc/bash_completion.d/
+  $ cp completion/font-patcher.sh $(brew --prefix)/etc/bash_completion.d/
 
   # ubuntu/centos/wsl
   $ cp completion/font-patcher.sh /usr/share/bash-completion/completions/
@@ -74,7 +74,7 @@ $ brew install fontforge
 - install fonttools
   ```bash
   # osx
-  $ brew install fonttools
+  $ brew install --HEAD fonttools
   # ubuntu
   $ sudo apt install fonttools
   # others
@@ -91,6 +91,10 @@ $ brew install fontforge
   # copy fonts into `original` folder
   $ cp OperatorMono*.otf /opt/operator-mono-lig/original
   $ cd /opt/operator-mono-lig
+
+  # optional
+  # -- remove less_slash glyphs --
+  $ find . -name less_slash.liga.xml -type f -delete
 
   # build ligature fonts
   $ npm install
