@@ -13,25 +13,35 @@ declare -r MONO_OPTIONS="--mono ${OPTIONS}"
 # for parameters
 declare sans=false
 declare mono=false
+declare operator=false
+declare monaco=false
 declare all=false
 declare path=''
 
 # usage
 declare usage="""
-\t to build Nerd Fonts for Sans or Mono type
-\nSYNOPSIS:
-\n\t$(c sY)\$ bash build.sh [ -h  | --help ]
-\t\t\t[ --sans | --mono ]
-\t\t\t[ -a/--all ]
-\t\t\t[ -p/--path <path> ]
-\t\t\t[ -- <PATCH_OPT> ]$(c)
-\nEXAMPLE:
-\n\tshow help
-\t\t$(c G)\$ bash build.sh -h$(c) | $(c G)\$ bash build.sh --help$(c)
-\n\tto build Nerd Fonts for Sans type with otf format
-\t\t$(c G)\$ bash build.sh --sans --path <path> -- -ext otf$(c)
-\n\tto build Nerd Fonts for Mono type with particular name
-\t\t$(c G)\$ bash build.sh --mono --path <path> -- --name 'NEW NAME Nerd Font'$(c)
+to build Nerd Fonts for Sans or Mono type
+
+SYNOPSIS
+
+  $(c sY)\$ bash build.sh [ -h | --help ]
+                  [ --operator-mono | --monaco ]
+                  [ --mono | --sans ]
+                  [ --sans | --mono ]
+                  [ -a/--all ]
+                  [ -p/--path <path> ]
+                  [ -- <PATCH_OPT> ]$(c)
+
+EXAMPLE
+
+  \t$(c Wdi)# show help$(c)
+  \t$(c G)\$ bash build.sh -h$(c) | $(c G)\$ bash build.sh --help$(c)
+
+  \t$(c Wdi)#to build Nerd Fonts for Sans type with otf format$(c)
+  \t$(c G)\$ bash build.sh --sans --path <path> -- -ext otf$(c)
+
+  \t$(c Wdi)#to build Nerd Fonts for Mono type with particular name$(c)
+  \t$(c G)\$ bash build.sh --mono --path <path> -- --name 'NEW NAME Nerd Font'$(c)
 """
 
 function message() {
@@ -134,12 +144,14 @@ function die() { echo -e "$(c R)ERROR$(c) : $*" >&2; exit 2; }
 # shellcheck disable=SC2124
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --sans          ) sans=true ; shift                  ;;
-    --mono          ) mono=true ; shift                  ;;
-    -a | --all      ) all=true  ; shift                  ;;
-    -p | --path     ) path="$2" ; shift 2                ;;
-    --              ) shift     ; PATCH_OPT="$@" ; break ;;
-    -h | --help | * ) showHelp                           ;;
+    --sans          ) sans=true              ; shift   ;;
+    --mono          ) mono=true              ; shift   ;;
+    --operator-mono ) operator=true          ; shift   ;;
+    --monaco        ) monaco=true            ; shift   ;;
+    -a | --all      ) all=true               ; shift   ;;
+    -p | --path     ) path="$2"              ; shift 2 ;;
+    --              ) shift ; PATCH_OPT="$@" ; break   ;;
+    -h | --help | * ) showHelp                         ;;
   esac
 done
 [[ -z "${path}" ]] && die "Please specify the path ( via \`-p/--path <path>\` )"
@@ -154,7 +166,7 @@ PATCH_OPT=$(echo "${PATCH_OPT:-}" |
 export PATCH_OPT
 
 # for `--all`
-if [[ 'true' = "${all}" ]]; then
+if "${all}"; then
   # mono
   patchMonaco
   patchOperatorMono
@@ -175,12 +187,10 @@ if [[ 'true' = "${all}" ]]; then
   done < <(fmt -1 <<< 'Papyrus segoe-print')
 fi
 
-if [[ 'true' = "${sans}" ]]; then
-  patchSans "${path}" "${PATCH_OPT}"
-fi
+"${operator}" && patchOperatorMono
+"${monaco}"   && patchMonaco
 
-if [[ 'true' = "${mono}" ]]; then
-  patchMono "${path}" "${PATCH_OPT}"
-fi
+"${sans}" && patchSans "${path}" "${PATCH_OPT}"
+"${mono}" && patchMono "${path}" "${PATCH_OPT}"
 
-# vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh
+# vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh:
