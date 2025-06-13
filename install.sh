@@ -4,7 +4,7 @@
 #     FileName : install.sh
 #       Author : marslo.jiao@gmail.com
 #      Created : 2024-04-16 01:39:12
-#   LastChange : 2025-06-13 01:15:37
+#   LastChange : 2025-06-13 01:22:34
 #=============================================================================
 
 set -euo pipefail
@@ -31,7 +31,6 @@ function isOSX()   { [[ "$(uname)" == "Darwin" ]]; }
 
 function die() { echo -e "$(c Ri)ERROR$(c)$(c 0i): $*.$(c) $(c 0Wdi)exit ...$(c)" >&2; exit 1; }
 function skip() { echo -e "$(c Ys)SKIP$(c)$(c 0i): $*.$(c) $(c 0Wdi)skip ...$(c)" >&2; }
-function showHelp() { echo -e "${USAGE}"; exit 0; }
 
 declare targetDir
 if isOSX; then
@@ -71,16 +70,6 @@ declare -A fontMeta=(
   [BradleyHandITC]='handwriting:normal'
 )
 
-# restructuring array list for help message
-declare -A fontGroups
-for name in "${!fontMeta[@]}"; do
-  IFS=';' read -ra groups <<< "${fontMeta[$name]}"
-  for group in "${groups[@]}"; do
-    groupType="${group%%:*}"
-    [[ -z "${fontGroups[${groupType}]:-}" ]] && fontGroups[${groupType}]="$name" || fontGroups[${groupType}]+=",$name"
-  done
-done
-
 # shellcheck disable=SC2155
 declare USAGE="""
 USAGE
@@ -97,27 +86,38 @@ OPTIONS
   $(c G)--help$(c), $(c G)-h$(c)           show this help
 
 EXAMPLE
-  $(c 0Gi)\$ bash ${ME} $(c 0Gi)--dryrun $(c 0Mi)Operator$(c)
-  $(c 0Gi)\$ bash ${ME} $(c 0Gi)--force --sans$(c)
-  $(c 0Gi)\$ bash ${ME} $(c 0Mi)Monaco Gisha Titillium $(c 0Gi)--force$(c)
-  $(c 0Gi)\$ bash ${ME} $(c 0Wi)/path/to/folder$(c)
+  $(c 0Ys)\$ bash ${ME} $(c 0Gi)--dryrun $(c 0Mi)Operator$(c)
+  $(c 0Ys)\$ bash ${ME} $(c 0Gi)--force --sans$(c)
+  $(c 0Ys)\$ bash ${ME} $(c 0Mi)Monaco Gisha Titillium $(c 0Gi)--force$(c)
+  $(c 0Ys)\$ bash ${ME} $(c 0Wi)/path/to/folder$(c)
 
 SUPPORTED FONT NAMES:
-$(
-  for group in $(printf "%s\n" "${!fontGroups[@]}" | sort); do
-    line="  - ${group}:\n"
+"""
+
+function showHelp() {
+  # restructuring array list for help message
+  local -A fontGroups
+  for name in "${!fontMeta[@]}"; do
+    IFS=';' read -ra groups <<< "${fontMeta[$name]}"
+    for group in "${groups[@]}"; do
+      groupType="${group%%:*}"
+      [[ -z "${fontGroups[${groupType}]:-}" ]] && fontGroups[${groupType}]="$name" || fontGroups[${groupType}]+=",$name"
+    done
+  done
+  echo -en "${USAGE}"
+  for group in "${!fontGroups[@]}"; do
+    line="  • ${group}:\n    "
     IFS=',' read -ra names <<< "${fontGroups[${group}]}"
-    line+='    '
     for i in "${!names[@]}"; do
       [[ ${i} -gt 0 ]] && line+=', '
       line+="$(c 0Mi)${names[${i}]}$(c)"
     done
-    line+="\n"
-    printf "%b" "${line}"
+    printf "%b\n" "${line}"
   done
-)
-"""
+  exit 0;
+}
 
+# parameters
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --sans | --mono | --cn | --handwriting )
@@ -131,7 +131,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-function parseFontMetaToTask() {
+function parseFontGroup() {
   local fontName="$1"
   local group="$2"
   IFS=':' read -r t1 t2 source path <<< "${group}"
@@ -218,7 +218,7 @@ if [[ "${#fontsToInstall[@]}" -gt 0 ]]; then
   for font in "${!fontsToInstall[@]}"; do
     IFS=';' read -ra groups <<< "${fontMeta[$font]}"
     for group in "${groups[@]}"; do
-      result="$(parseFontMetaToTask "${font}" "${group}")"
+      result="$(parseFontGroup "${font}" "${group}")"
       IFS='|' read -r srcPattern tag srcDesc <<< "${result}"
       [[ -z "${srcPattern}"  ]] && continue
       copyFonts "${srcPattern}" "${targetDir}" "${tag}" "${srcDesc}"
