@@ -27,7 +27,7 @@ class FontnameParser:
     def _make_ps_name(self, n, is_family):
         """Helper to limit font name length in PS names"""
         fam = 'family ' if is_family else ''
-        limit = 100 if is_family else 63
+        limit = 31 if is_family else 63
         if len(n) <= limit:
             return n
         r = re.search('(.*)(-.*)', n)
@@ -316,7 +316,7 @@ class FontnameParser:
         ret = [ ]
         for i in range(maxnum):
             if len(names[i]):
-                ret += [( languages[i], entry, self.checklen(100, message, names[i]) )]
+                ret += [( languages[i], entry, self.checklen(31, message, names[i]) )]
             else:
                 break
         return ret
@@ -369,8 +369,8 @@ class FontnameParser:
                 if k == 'Version':
                     version_tag = ' ' + v.split()[-1]
 
-        sfnt_list += [( 'English (US)', 'Family', self.checklen(100, 'Family (ID 1)', self.family()) )] # 1
-        sfnt_list += [( 'English (US)', 'SubFamily', self.checklen(100, 'SubFamily (ID 2)', self.subfamily()) )] # 2
+        sfnt_list += [( 'English (US)', 'Family', self.checklen(31, 'Family (ID 1)', self.family()) )] # 1
+        sfnt_list += [( 'English (US)', 'SubFamily', self.checklen(31, 'SubFamily (ID 2)', self.subfamily()) )] # 2
         sfnt_list += [( 'English (US)', 'UniqueID', self.fullname() + version_tag )] # 3
         sfnt_list += [( 'English (US)', 'Fullname', self.checklen(63, 'Fullname (ID 4)', self.fullname()) )] # 4
         sfnt_list += [( 'English (US)', 'PostScriptName', self.checklen(63, 'PSN (ID 6)', self.psname()) )] # 6
