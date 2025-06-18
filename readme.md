@@ -4,6 +4,27 @@
 >
 > this is a patched font-patcher tool with bash completion
 
+```bash
+# -- download the latest FontPatcher branch --
+$ git clone --single-branch --branch FontPatcher git@github.com:marslo/fonts.git
+
+# or
+$ curl -o FontPatcher.zip \
+       -fsSL https://github.com/marslo/fonts/releases/download/v3.4.0.1/FontPatcher-v3.4.0.1.zip &&
+  unzip FontPatcher.zip
+```
+
+```bash
+# -- install --
+# osx
+$ cp completion/font-patcher.sh $(brew --prefix)/etc/bash_completion.d/
+
+# ubuntu/centos/wsl
+$ cp completion/font-patcher.sh /usr/share/bash-completion/completions/
+# or
+$ cp completion/font-patcher.sh /etc/bash_completion.d/
+```
+
 ---
 
 # Nerd Fonts
