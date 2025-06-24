@@ -59,7 +59,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-LightItalic.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Medium.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-MediumItalic.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Regular.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNF/otf/OperatorMonoNerdFontMono-Regular.otf &&
+  fc-cache -f -v
 ```
 
 ![OperatorMonoNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoNFM-Light.png)
@@ -80,7 +81,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-Italic.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-Light.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-LightItalic.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-Regular.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/otf/OperatorMonoLigNerdFontMono-Regular.otf &&
+  fc-cache -f -v
 
 # or ligatures without less-slash ( `</` )
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
@@ -88,7 +90,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-Italic.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-Light.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-LightItalic.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-Regular.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNF/NoLessSlash/otf/OperatorMonoLigNerdFontMono-Regular.otf &&
+  fc-cache -f -v
 ```
 
 ![OperatorMonoLigNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoLigNFM-Light.png)
@@ -110,7 +113,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-LightItalic.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Medium.otf \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-MediumItalic.otf \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Regular.otf
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNF/otf/OperatorMonoSSmLigNerdFontMono-Regular.otf &&
+  fc-cache -f -v
 ```
 
 ![OperatorMonoSSmLigNFM-Light](https://github.com/marslo/fonts/raw/fonts/Operator/OperatorMonoSSmLigNFM-Light.png)
@@ -136,7 +140,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-MediumItalic.${ext} \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProNerdFont-Regular.${ext} \
        https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProXNerdFont-Light.${ext} \
-       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProXNerdFont-LightItalic.${ext}
+       https://github.com/marslo/fonts/raw/fonts/Operator/OperatorProNF/${ext}/OperatorProXNerdFont-LightItalic.${ext} &&
+  fc-cache -f -v
 ```
 
 ## [Recursive](https://github.com/arrowtype/recursive)
@@ -151,7 +156,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-Regular.otf \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-Italic.otf  \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoCasual/RecMonoCasualNerdFontMono-BoldItalic.otf &&
+  fc-cache -f -v
 ```
 
 ### RecMonoLinear Nerd Font Mono
@@ -161,7 +167,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-Regular.otf \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-Italic.otf  \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoLinear/RecMonoLinearNerdFontMono-BoldItalic.otf &&
+  fc-cache -f -v
 ```
 
 ### RecMonoSmCasual Nerd Font Mono
@@ -171,7 +178,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Regular.otf \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Italic.otf  \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoSemicasual/RecMonoSmCasualNerdFontMono-BoldItalic.otf &&
+  fc-cache -f -v
 ```
 
 ### RecMonoDuotone Nerd Font Mono
@@ -181,7 +189,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Regular.otf \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Italic.otf  \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-Bold.otf    \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveCodeNF/RecMonoDuotone/RecMonoDuotoneNerdFontMono-BoldItalic.otf &&
+  fc-cache -f -v
 ```
 
 ![RecMonoCasualNFM](https://github.com/marslo/fonts/raw/fonts/Recursive/RecMonoCasualNFM.png)
@@ -193,8 +202,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-Regular.otf \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-Italic.otf  \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-Light.otf   \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-LightItalic.otf
-
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansCasualStaticNerdFont-LightItalic.otf &&
+  fc-cache -f -v
 ```
 
 ### Recursive Sans Linear Static Nerd Font
@@ -204,7 +213,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-Regular.otf \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-Italic.otf  \
        https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-Light.otf   \
-       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-LightItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Recursive/RecursiveDesktopNF/otf/RecursiveSansLinearStaticNerdFont-LightItalic.otf &&
+  fc-cache -f -v
 ```
 
 ## Monaco Nerd Font Mono
@@ -220,7 +230,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNF/otf/MonacoNerdFontMono-Regular.otf  \
        https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNF/otf/MonacoNerdFontMono-Italic.otf   \
        https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNF/otf/MonacoNerdFontMono-Bold.otf     \
-       https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNF/otf/MonacoNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNF/otf/MonacoNerdFontMono-BoldItalic.otf &&
+  fc-cache -f -v
 ```
 
 ### MonacoLigaturized Nerd Font Mono
@@ -230,7 +241,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
        https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoLigNF/otf/MonacoLigaturizedNerdFontMono-Regular.otf  \
        https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoLigNF/otf/MonacoLigaturizedNerdFontMono-Italic.otf   \
        https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoLigNF/otf/MonacoLigaturizedNerdFontMono-Bold.otf     \
-       https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoLigNF/otf/MonacoLigaturizedNerdFontMono-BoldItalic.otf
+       https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoLigNF/otf/MonacoLigaturizedNerdFontMono-BoldItalic.otf &&
+  fc-cache -f -v
 ```
 
 ![MonacoNFM](https://github.com/marslo/fonts/raw/fonts/Monaco/MonacoNFM.png)
@@ -240,7 +252,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
        https://github.com/marslo/fonts/raw/fonts/VictorMono/VictorMono-Light.ttf \
-       https://github.com/marslo/fonts/raw/fonts/VictorMono/VictorMono-LightItalic.ttf
+       https://github.com/marslo/fonts/raw/fonts/VictorMono/VictorMono-LightItalic.ttf &&
+  fc-cache -f -v
 ```
 
 ![VictorMonoNFM-Light](https://github.com/marslo/fonts/raw/fonts/VictorMono/VictorMonoNFM-Light.png)
@@ -250,7 +263,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
        https://github.com/marslo/fonts/raw/fonts/ComicMono/ComicMonoNerdFontMono-Regular.otf \
-       https://github.com/marslo/fonts/raw/fonts/ComicMono/ComicMonoNerdFontMono-Bold.otf
+       https://github.com/marslo/fonts/raw/fonts/ComicMono/ComicMonoNerdFontMono-Bold.otf &&
+  fc-cache -f -v
 ```
 
 ![ComicMonoNFM](https://github.com/marslo/fonts/raw/fonts/ComicMono/ComicMonoNFM.png)
@@ -260,7 +274,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 $ curl --create-dirs -O --output-dir "${fontsPath}" \
        -fsSL --remote-name-all \
        https://github.com/marslo/fonts/raw/fonts/monofur/MonofurNerdFontMono-Regular.ttf \
-       https://github.com/marslo/fonts/raw/fonts/monofur/MonofurNerdFontMono-Italic.ttf
+       https://github.com/marslo/fonts/raw/fonts/monofur/MonofurNerdFontMono-Italic.ttf &&
+  fc-cache -f -v
 ```
 
 ![MonofurNFM](https://github.com/marslo/fonts/raw/fonts/monofur/MonofurNFM.png)
@@ -268,7 +283,8 @@ $ curl --create-dirs -O --output-dir "${fontsPath}" \
 ## Menlo Nerd Font Mono
 ```bash
 $ curl --create-dirs -O --output-dir "${fontsPath}" -fsSL \
-       https://github.com/marslo/fonts/raw/fonts/menlo/MenloNerdFontMono-Regular.otf
+       https://github.com/marslo/fonts/raw/fonts/menlo/MenloNerdFontMono-Regular.otf &&
+  fc-cache -f -v
 ```
 
 ![MenloNFM-Regular](https://github.com/marslo/fonts/raw/fonts/menlo/MenloNFM-Regular.png)
