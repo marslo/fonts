@@ -4,7 +4,7 @@
 #     FileName : install.sh
 #       Author : marslo.jiao@gmail.com
 #      Created : 2024-04-16 01:39:12
-#   LastChange : 2025-06-13 01:22:34
+#   LastChange : 2025-06-24 15:08:53
 #=============================================================================
 
 set -euo pipefail
@@ -221,13 +221,15 @@ if [[ "${#fontsToInstall[@]}" -gt 0 ]]; then
       result="$(parseFontGroup "${font}" "${group}")"
       IFS='|' read -r srcPattern tag srcDesc <<< "${result}"
       [[ -z "${srcPattern}"  ]] && continue
-      copyFonts "${srcPattern}" "${targetDir}" "${tag}" "${srcDesc}"
+      copyFonts "${srcPattern}" "${targetDir}" "${tag}" "${srcDesc}" &&
+      { command type -P fc-cache >/dev/null && fc-cache -f -v || true; }
     done
   done
 else
   for arg in "${paramList[@]}"; do
     if [[ -d "${arg}" ]]; then
-      copyFonts "${arg}/*NerdFont*" "${targetDir}" "DIRECTORY" "${arg}"
+      copyFonts "${arg}/*NerdFont*" "${targetDir}" "DIRECTORY" "${arg}" &&
+      { command type -P fc-cache >/dev/null && fc-cache -f -v || true; }
     else
       skip "no font matched: ${arg}"
     fi
