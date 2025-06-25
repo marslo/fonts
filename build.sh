@@ -76,16 +76,13 @@ EXAMPLE
 function message() {
   local msg=''
   if [[ 1 -eq "$#" ]]; then
-    command -v c >/dev/null && msg="$(c Rsi)$1$(c)" || msg="$1"
-    msg="clean up Nerd Fonts ${msg}"
+    msg="$(c Wdi)clean up Nerd Fonts $(c 0Rsi)'$1'$(c)"
   elif [[ 2 -eq "$#" ]]; then
-    command -v c >/dev/null && msg="$(c Gi)$1$(c) » $(c Ys)$2$(c)" || msg="$1 » $2"
-    msg="building ${msg}"
+    msg="$(c Wdi)building $(c 0Gi)$1$(c) $(c Wdi)»$(c) $(c Ys)$2$(c)"
   elif [[ 3 -eq "$#" ]]; then
-    command -v c >/dev/null && msg="$(c Ms)$1$(c) » $(c Gi)$2$(c) » $(c Ys)$3$(c)" || msg="$1 » $2 » $3"
-    msg="building ${msg}"
+    msg="$(c Wdi)building $(c 0Ms)$1$(c) $(c Wdi)»$(c) $(c Gi)$2$(c) $(c Wdi)»$(c) $(c Ys)$3$(c)"
   fi
-  printf "\n.. %b\n" "${msg}"
+  printf "\n$(c Wdi)..$(c) %b\n" "${msg}"
 }
 
 function patchRecursiveDesktop() {
@@ -136,7 +133,7 @@ function patchRecursiveMono() {
 
 function patchMonaco() {
   if ls Monaco/*NF/*/* >/dev/null 2>&1; then
-    message "Monaco"/*NF/*/*
+    message "Monaco/*NF/*/*"
     # shellcheck disable=SC2015
     "${dryrun}" &&
       for i in Monaco/*NF/*/*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
@@ -202,7 +199,7 @@ function patchSans() {
   path="$1"
   opt="${2:-}"
   if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
-    message "${path}"/*NerdFont*
+    message "${path}/*NerdFont*"
     # shellcheck disable=SC2015
     "${dryrun}" &&
       for i in "${path}"/*NerdFont*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
@@ -222,7 +219,7 @@ function patchMono() {
   path="$1"
   opt="${2:-}"
   if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
-    message "${path}"/*NerdFont*
+    message "${path}/*NerdFont*"
     # shellcheck disable=SC2015
     "${dryrun}" &&
       for i in "${path}"/*NerdFont*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
