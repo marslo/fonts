@@ -27,7 +27,7 @@ class FontnameParser:
     def _make_ps_name(self, n, is_family):
         """Helper to limit font name length in PS names"""
         fam = 'family ' if is_family else ''
-        limit = 31 if is_family else 63
+        limit = 63 if is_family else 127
         if len(n) <= limit:
             return n
         r = re.search('(.*)(-.*)', n)

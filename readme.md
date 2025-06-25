@@ -10,7 +10,7 @@ $ git clone --single-branch --branch FontPatcher git@github.com:marslo/fonts.git
 
 # or
 $ curl -o FontPatcher.zip \
-       -fsSL https://github.com/marslo/fonts/releases/download/v3.4.0.1/FontPatcher-v3.4.0.1.zip &&
+       -fsSL https://github.com/marslo/fonts/releases/download/v3.4.0.2/FontPatcher-v3.4.0.2.zip &&
   unzip FontPatcher.zip
 ```
 
