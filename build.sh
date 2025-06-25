@@ -211,7 +211,8 @@ function patchSans() {
   while read -r _f; do
     outpath="$(dirname "${_f}")";
     message "$(basename "${_f}")" "${outpath}"
-    cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${OPTIONS[@]}" -out "${outpath}" "${opt}" )
+    cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${OPTIONS[@]}" -out "${outpath}" )
+    [[ -n "${opt}" ]] && cmd+=("${opt}")
     # shellcheck disable=SC2015
     "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
   done < <(fd -u -tf -e ttf -e otf --full-path "${path}")
@@ -231,7 +232,8 @@ function patchMono() {
     outpath="$(dirname "${_f}")";
     for _e in otf ttf; do
       message "${_e}" "$(basename "${_f}")" "${outpath}"
-      cmd=("${FONT_PATCHER}" "$(realpath "${_f}")" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" "${opt}")
+      cmd=("${FONT_PATCHER}" "$(realpath "${_f}")" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
+      [[ -n "${opt}" ]] && cmd+=("${opt}")
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done;
