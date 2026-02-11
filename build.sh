@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo.jiao@gmail.com
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2025-06-11 18:59:25
+#   LastChange : 2026-02-11 14:26:18
 #=============================================================================
 
 set -euo pipefail
@@ -62,7 +62,7 @@ EXAMPLE
   $(c Ys)\$ ${ME} $(c 0G)-h$(c) | $(c Ys)\$ ${ME} $(c 0G)--help$(c)
 
   $(c Wdi)# show patch command only ( dryrun mode )$(c)
-  $(c Ys)\$ ${ME} $(c 0G)--OPTION $(c 0Gi)--dry-run$(c)
+  $(c Ys)\$ ${ME} $(c 0Ci)--OPTION $(c 0Gi)--dry-run$(c)
   $(c Wdi)# i.e.:$(c)
   $(c Ys)\$ ${ME} $(c 0G)--operator-mono $(c 0Gi)--dry-run$(c)
 
@@ -95,13 +95,13 @@ function patchRecursiveDesktop() {
   fi
   while read -r _f; do
     outpath="$(dirname "${_f}")NF";
-    fontfamily="$(fc-query -f '%{family}' "$(realpath "${_f}")" | awk -F, '{print $1}')";
-    style="$(fc-query -f '%{style}' "$(realpath "${_f}")" | awk -F, '{print $1}')";
+    fontfamily="$(fc-query -f '%{family}' "$(realpath "${_f}" --relative-to=.)" | awk -F, '{print $1}')";
+    style="$(fc-query -f '%{style}' "$(realpath "${_f}" --relative-to=.)" | awk -F, '{print $1}')";
     name="${fontfamily} ${style} Nerd Font";
     for _e in otf ttf; do
       [[ -d "${outpath}/${_e}" ]] || mkdir -p "${outpath}/${_e}";
       message "${_e}" "$(basename "${_f}")" "${outpath}"
-      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" --name "${name}" )
+      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" --name "${name}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
@@ -118,13 +118,13 @@ function patchRecursiveMono() {
   fi
   while read -r _f; do
     outpath="$(dirname "${_f}")NF";
-    fontfamily="$(fc-query -f '%{family}' "$(realpath "${_f}")" | awk -F, '{print $1}')";
-    style="$(fc-query -f '%{style}' "$(realpath "${_f}")" | awk -F, '{print $1}')";
+    fontfamily="$(fc-query -f '%{family}' "$(realpath "${_f}" --relative-to=.)" | awk -F, '{print $1}')";
+    style="$(fc-query -f '%{style}' "$(realpath "${_f}" --relative-to=.)" | awk -F, '{print $1}')";
     name="${fontfamily} ${style} Nerd Font";
     for _e in otf ttf; do
       [[ -d "${outpath}/${_e}" ]] || mkdir -p "${outpath}/${_e}";
       message "${_e}" "$(basename "${_f}")" "${outpath}"
-      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" --name "${name}" )
+      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" --name "${name}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
@@ -144,7 +144,7 @@ function patchMonaco() {
       outpath="$(dirname "${_f}")NF/${_e}";
       [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
       message "$(basename "${_f}")" "${outpath}"
-      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
+      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
@@ -166,7 +166,7 @@ function patchOperatorMono() {
       outpath="${first}/${second}NF${rest:+/${rest}}/${_e}";
       [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
       message "$(basename "${_f}")" "${outpath}"
-      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
+      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
@@ -188,7 +188,7 @@ function patchOperatorPro() {
       outpath="${first}/${second}NF${rest:+/${rest}}/${_e}";
       [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
       message "$(basename "${_f}")" "${outpath}"
-      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
+      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
@@ -196,8 +196,9 @@ function patchOperatorPro() {
 }
 
 function patchSans() {
-  path="$1"
-  opt="${2:-}"
+  local path="$1"
+  local -n opt="${2:-}"
+
   if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
     message "${path}/*NerdFont*"
     # shellcheck disable=SC2015
@@ -208,16 +209,17 @@ function patchSans() {
   while read -r _f; do
     outpath="$(dirname "${_f}")";
     message "$(basename "${_f}")" "${outpath}"
-    cmd=( "${FONT_PATCHER}" "$(realpath "${_f}")" "${OPTIONS[@]}" -out "${outpath}" )
-    [[ -n "${opt}" ]] && cmd+=("${opt}")
+    cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -out "${outpath}" )
+    [[ -n "${#opt[@]}" ]] && cmd+=( "${opt[@]}" )
     # shellcheck disable=SC2015
     "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
   done < <(fd -u -tf -e ttf -e otf --full-path "${path}")
 }
 
 function patchMono() {
-  path="$1"
-  opt="${2:-}"
+  local path="$1"
+  local -n opt="${2:-}"
+
   if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
     message "${path}/*NerdFont*"
     # shellcheck disable=SC2015
@@ -229,8 +231,8 @@ function patchMono() {
     outpath="$(dirname "${_f}")";
     for _e in otf ttf; do
       message "${_e}" "$(basename "${_f}")" "${outpath}"
-      cmd=("${FONT_PATCHER}" "$(realpath "${_f}")" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
-      [[ -n "${opt}" ]] && cmd+=("${opt}")
+      cmd=("${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
+      [[ -n "${#opt[@]}" ]] && cmd+=( "${opt[@]}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done;
@@ -240,8 +242,10 @@ function patchMono() {
 function showHelp() { echo -e "${USAGE}"; exit 0; }
 function die() { echo -e "$(c R)ERROR$(c) : $*" >&2; exit 2; }
 
+declare -a PATCH_OPT=()
+
 [[ 0 = "$#" ]] && showHelp
-# shellcheck disable=SC2124
+# shellcheck disable=SC2124,SC2034
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --sans              ) sans=true                ; shift   ;;
@@ -254,8 +258,8 @@ while [[ $# -gt 0 ]]; do
     --dry-run           ) dryrun=true              ; shift   ;;
     -a | --all          ) all=true                 ; shift   ;;
     -p | --path         ) path="$2"                ; shift 2 ;;
-    --                  ) shift ; PATCH_OPT="$@"   ; break   ;;
-    -h | --help | *     ) showHelp                         ;;
+    --                  ) shift ; PATCH_OPT=("$@") ; break   ;;
+    -h | --help | *     ) showHelp                           ;;
   esac
 done
 
@@ -263,13 +267,6 @@ done
   die "Please specify the path ( via \`-p/--path <path>\` )"
 # shellcheck disable=SC2001
 path="$(sed 's#/*$##' <<< "${path}")"
-
-PATCH_OPT=$( echo "${PATCH_OPT:-}" |
-             sed -r 's/\s+--/\n--/g' |
-             sed -r "s/^([^ ]+) (.+)$/\1 '\2'/g" |
-             sed -e 'N;s/\n/ /'
-           )
-export PATCH_OPT
 
 # for `--all`
 if "${all}"; then
@@ -300,7 +297,7 @@ fi
 "${recursived}" && patchRecursiveDesktop
 "${recursivem}" && patchRecursiveMono
 
-"${sans}"       && patchSans "${path}" "${PATCH_OPT}"
-"${mono}"       && patchMono "${path}" "${PATCH_OPT}"
+"${sans}"       && patchSans "${path}" PATCH_OPT
+"${mono}"       && patchMono "${path}" PATCH_OPT
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh:
