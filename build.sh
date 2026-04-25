@@ -4,19 +4,14 @@
 #     FileName : build.sh
 #       Author : marslo.jiao@gmail.com
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-02-11 14:26:18
+#   LastChange : 2026-04-24 19:06:21
 #=============================================================================
 
 set -euo pipefail
 
 # @credit: https://github.com/ppo/bash-colors
-# @usage:  or copy & paste the `c()` function from:
-#          https://github.com/ppo/bash-colors/blob/master/bash-colors.sh#L3
-if [[ -f "${HOME}/.marslo/bin/bash-color.sh" ]]; then
-  source "${HOME}/.marslo/bin/bash-color.sh"
-else
-  c() { :; }
-fi
+# shellcheck disable=SC2015,SC2059
+c() { [ $# == 0 ] && printf "\033[0m" || printf "$1" | sed 's/\(.\)/\1;/g;s/\([SDIUFNHT]\)/2\1/g;s/\([KRGYBMCW]\)/3\1/g;s/\([krgybmcw]\)/4\1/g;y/SDIUFNHTsdiufnhtKRGYBMCWkrgybmcw/12345789123457890123456701234567/;s/^\(.*\);$/\\033[\1m/g'; }
 
 declare -r FONT_PATCHER='/opt/FontPatcher/font-patcher'
 declare -ra OPTIONS=( --complete --careful --quiet )
@@ -64,13 +59,13 @@ EXAMPLE
   $(c Wdi)# show patch command only ( dryrun mode )$(c)
   $(c Ys)\$ ${ME} $(c 0Ci)--OPTION $(c 0Gi)--dry-run$(c)
   $(c Wdi)# i.e.:$(c)
-  $(c Ys)\$ ${ME} $(c 0G)--operator-mono $(c 0Gi)--dry-run$(c)
+  $(c Ys)\$ ${ME} $(c 0Gi)--operator-mono --dry-run$(c)
 
-  $(c Wdi)# to patch Nerd Fonts for $(c 0G)Sans $(c 0Wdi)type with $(c 0Bi)otf$(c 0Wdi) format$(c)
-  $(c Ys)\$ ${ME} $(c 0G)--sans --path $(c 0Mi)<path>$(c) $(c 0Bi)-- -ext otf$(c)
+  $(c Wdi)# to patch Nerd Fonts for $(c 0Gi)Sans $(c 0Wdi)type with $(c 0Bi)otf$(c 0Wdi) format$(c)
+  $(c Ys)\$ ${ME} $(c 0Gi)--sans --path $(c 0Mi)<path>$(c) $(c 0Bi)-- -ext otf$(c)
 
-  $(c Wdi)# to patch Nerd Fonts for $(c 0G)Mono $(c 0Wdi)type with $(c 0Bi)particular name$(c)
-  $(c Ys)\$ ${ME} $(c 0G)--mono --path $(c 0Mi)<path>$(c) $(c 0Bi)-- --name 'NEW NAME Nerd Font'$(c)
+  $(c Wdi)# to patch Nerd Fonts for $(c 0Gi)Mono $(c 0Wdi)type with $(c 0Bi)particular name$(c)
+  $(c Ys)\$ ${ME} $(c 0Gi)--mono --path $(c 0Mi)<path>$(c) $(c 0Bi)-- --name 'NEW NAME Nerd Font'$(c)
 """
 
 function message() {

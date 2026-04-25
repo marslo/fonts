@@ -14,8 +14,9 @@
   - [Recursive](#recursive)
   - [victor mono](#victor-mono)
   - [monofur](#monofur)
-  - [functions](#functions)
+  - [iosevka](#iosevka)
 - [tips](#tips)
+  - [get font version](#get-font-version)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -164,6 +165,48 @@ $ while read -r _f; do
   done < <(fd -u -tf -e ttf -e otf --full-path ./Monaco)
 ```
 
+### [iosevka](https://github.com/be5invis/iosevka)
+
+> [!NOTE]
+> - [iosevka](https://typeof.net/Iosevka) | [be5invis/iosevka](https://github.com/be5invis/iosevka)
+> - [package link](https://github.com/be5invis/Iosevka/blob/main/doc/PACKAGE-LIST.md)
+> - font types
+>   - [stylistic sets](https://github.com/be5invis/Iosevka/blob/main/doc/stylistic-sets.md)
+>   - [ligation sets](https://github.com/be5invis/Iosevka/blob/main/doc/language-specific-ligation-sets.md)
+> - original fonts:
+>   - [PkgTTF-IosevkaSS15-34.4.0.zip](https://github.com/be5invis/Iosevka/releases/download/v34.4.0/PkgTTF-IosevkaSS15-34.4.0.zip)
+>   - [PkgTTF-IosevkaTermSS15-34.4.0.zip](https://github.com/be5invis/Iosevka/releases/download/v34.4.0/PkgTTF-IosevkaTermSS15-34.4.0.zip)
+
+```bash
+$ bash build.sh --mono --path iosevka
+```
+
+#### build iosevka custom fonts
+
+1. clone code
+   ```bash
+   $ git clone --depth 1 https://github.com/be5invis/Iosevka.git /path/to/iosevka
+   ```
+
+2. copy the toml file and build
+
+    > [!TIP]
+    > - [generate toml automatically](https://typeof.net/Iosevka/customizer)
+    > - [Building Iosevka from Source](https://github.com/be5invis/Iosevka/blob/main/doc/custom-build.md)
+
+    ```bash
+    $ cp iosevka/marslo/private-build-plans.normal.toml /path/to/iosevka/private-build-plans.toml
+    # or
+    $ cp iosevka/marslo-term/private-build-plans.term.toml /path/to/iosevka/private-build-plans.toml
+
+    # build
+    $ npm install
+    $ npm run build -- contents::$(sed -nE '1s/^.*\.(.+)]$/\1/p' < private-build-plans.toml)
+
+    # cleanup
+    $ test -d /path/to/iosevka/dist && rm -rf /path/to/iosevka/dist
+    ```
+
 ### [Recursive](https://github.com/arrowtype/recursive)
 - code
   ```bash
@@ -213,10 +256,6 @@ $ while read -r _f; do
 $ font-patcher ./monofur/monofur.ttf        --mono --complete --progressbars --extension ttf --outputdir ./monofur --name "monofur Regular Nerd Font" 2>/dev/null
 $ font-patcher ./monofur/monofur-italic.ttf --mono --complete --progressbars --extension ttf --outputdir ./monofur --name "monofur Italic Nerd Font"  2>/dev/null
 ```
-
-### functions
-- [patchSans](./build.sh#L75-L85)
-- [patchMono](./build.sh#L88-L101)
 
 ## tips
 - list fonts properties

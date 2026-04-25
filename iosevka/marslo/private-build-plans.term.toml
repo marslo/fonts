@@ -1,0 +1,44 @@
+[buildPlans.IosevkaPlexTermMarslo]
+family = "Iosevka Plex Term Marslo"
+spacing = "term"
+serifs = "sans"
+noCvSs = false
+exportGlyphNames = true
+
+  [buildPlans.IosevkaPlexTermMarslo.variants]
+  inherits = "ss15"
+
+    [buildPlans.IosevkaPlexTermMarslo.variants.design]
+    one = "base-long-top-serif"
+    seven = "straight-serifless-crossbar"
+
+    [buildPlans.IosevkaPlexTermMarslo.variants.italic]
+    one = "base-long-top-serif"
+    seven = "straight-serifless-crossbar"
+    capital-q = "crossing-curly-tailed"
+    q = "diagonal-tailed-serifless"
+
+  [buildPlans.IosevkaPlexTermMarslo.ligations]
+  inherits = "dlig"
+
+[buildPlans.IosevkaPlexTermMarslo.weights.Regular]
+shape = 400
+menu = 400
+css = 400
+
+[buildPlans.IosevkaPlexTermMarslo.weights.Bold]
+shape = 700
+menu = 700
+css = 700
+
+[buildPlans.IosevkaPlexTermMarslo.slopes.Upright]
+angle = 0
+shape = "upright"
+menu = "upright"
+css = "normal"
+
+[buildPlans.IosevkaPlexTermMarslo.slopes.Italic]
+angle = 9.4
+shape = "italic"
+menu = "italic"
+css = "italic"
