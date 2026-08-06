@@ -56,7 +56,7 @@ FONT_PATCHER=~/git/nerd-fonts/font-patcher \
 # once the dry-run looks right, drop --dry-run and add --install to build + refresh the font cache
 ```
 
-`FONT_ROOT` holds the sources; generated faces land in `FONT_ROOT/up/` (patched ones in `FONT_ROOT/up/nf/`). The zip contains **only** the source OTFs — the scripts themselves are this `up/` toolkit. `Black` has no `Upright`/`Italic` pair, so it is reported as `skip Black` and left untouched. Steps 1 → 4 then run automatically (see below).
+`FONT_ROOT` holds the sources; generated faces land in `FONT_ROOT/up/` (patched ones in `FONT_ROOT/up/nf/`). The zip contains **only** the source OTFs — the scripts themselves are this `up/` toolkit. `Black` has no `Upright`/`Italic` pair, so it is reported as `skip Black` and left untouched. Steps 1 → 5 then run automatically (see below).
 
 ## Directory layout
 
@@ -66,10 +66,11 @@ FONT_PATCHER=~/git/nerd-fonts/font-patcher \
 ├── Titillium-<W>Italic.otf      # original italics (slanted outlines)
 ├── Titillium-<W>Upright.otf     # upright faces (dirty metadata)
 └── up/
-    ├── 00-run-all.sh            # one-shot orchestrator (steps 1-4)
+    ├── 00-run-all.sh            # one-shot orchestrator (steps 1-5)
     ├── 01-gen-upright-italic.py
     ├── 02-fix-upright-source.py
     ├── 03-fix-nf.py
+    ├── 04-fix-guillemet.py      # repair single-chevron «/» on upright faces
     ├── README.md
     ├── Titillium-<W>Upright.otf        # staged pairs (after step 1/2)
     ├── Titillium-<W>UprightItalic.otf  # generated (step 1)
@@ -82,7 +83,7 @@ All three Python scripts accept `--dry-run` to print intended changes and write 
 
 ## One-shot pipeline: `00-run-all.sh`
 
-Runs steps 1 → 4 in order (generate → clean → font-patcher → fix [+ install]).
+Runs steps 1 → 5 in order (generate → clean → repair guillemets → font-patcher → fix [+ install]).
 
 ```bash
 cd ~/Desktop/titillium/up
@@ -143,6 +144,27 @@ In place on every `up/nf/*.otf|*.ttf`. Detects weight + italic from the font's o
 
 `--install` performs the sequence that actually refreshes CoreText on macOS 14+: copy → `rm -rf ~/Library/Caches/com.apple.FontRegistry` → `killall fontd` →`CTFontManagerRegisterFontsForURL(..., .user, ...)`.
 
+### `04-fix-guillemet.py` — repair single-chevron `«` / `»`
+
+Titillium's **Regular** `Upright` source draws `guillemotleft` / `guillemotright` with a **single** chevron (one contour) instead of the usual **double** chevron (two contours), so `»` shows as a lone `>`. Only the Regular-weight upright is affected — every other face (the normal `Titillium-<W>.otf` and the other `Upright` weights) already has the double chevron.
+
+Transplants the correct double-chevron outline (CFF charstring + `hmtx`, metadata untouched) from the same-weight upright donor `FONT_ROOT/Titillium-<W>.otf` — weight read from the target's `usWeightClass` — into any target whose guillemet is missing or has fewer than two contours. Idempotent: faces that already carry a double chevron are left alone.
+
+> **Donor is always the upright (non-italic) face.** The bug only ever hits upright faces; every italic face already ships a double chevron and is skipped, so the upright donor is always right. Use `--donor=FILE` to force a specific donor.
+
+Runs in the pipeline as step 3 (after `02` cleans metadata, before `font-patcher`), so the patched output is already correct. It also works standalone on the patched `up/nf/` faces or on an installed `~/Library/Fonts/*.otf`.
+
+```bash
+./04-fix-guillemet.py                             # default DIR=~/Desktop/titillium/up
+./04-fix-guillemet.py ~/Desktop/titillium/up/nf   # fix patched output in place
+./04-fix-guillemet.py /path/to/Font.otf --root=/path/to/sources --dry-run
+```
+
+- `--root=DIR` donor folder (default `~/Desktop/titillium`)
+- `--donor=FILE` force one donor face (skips weight lookup)
+- `--force` re-transplant even if the target already has ≥ 2 contours
+- `--dry-run` print intended changes, write nothing
+
 ## Full pipeline (manual / step-by-step)
 
 Equivalent to `00-run-all.sh`, if you'd rather run each stage yourself.
@@ -150,21 +172,26 @@ Equivalent to `00-run-all.sh`, if you'd rather run each stage yourself.
 ### Workflow — what each step does
 
 ```text
-[1/4] 01-gen-upright-italic.py   generate the upright-italics
+[1/5] 01-gen-upright-italic.py   generate the upright-italics
         Titillium-<W>Italic.otf    (outlines / slant)
       + Titillium-<W>Upright.otf   (name table only)
       -> up/Titillium-<W>UprightItalic.otf   <- deliberately written with correct italic flags (italicAngle = -13, etc.)
       also stages Titillium-<W>Upright.otf into up/ unchanged
 
-[2/4] 02-fix-upright-source.py   clean the dirty metadata on the UPRIGHT sources   (* BEFORE patching)
+[2/5] 02-fix-upright-source.py   clean the dirty metadata on the UPRIGHT sources   (* BEFORE patching)
         up/Titillium-<W>Upright.otf:
           post / CFF ItalicAngle -13 -> 0, clear the macStyle italic bit, set REGULAR/BOLD fsSelection by weight
         (skips *UprightItalic -- those are supposed to stay italic)
 
-[3/4] font-patcher               add the Nerd Font glyphs
+[3/5] 04-fix-guillemet.py        repair single-chevron «/» on the UPRIGHT sources  (* BEFORE patching)
+        up/Titillium-<W>Upright.otf:
+          if guillemotleft/right have < 2 contours (single chevron), transplant the
+          double-chevron outline + hmtx from FONT_ROOT/Titillium-<W>.otf (idempotent)
+
+[4/5] font-patcher               add the Nerd Font glyphs
         up/Titillium-<W>Upright.otf + up/Titillium-<W>UprightItalic.otf -> up/nf/
 
-[4/4] 03-fix-nf.py               fix the metadata that font-patcher mangled   (* AFTER patching)
+[5/5] 03-fix-nf.py               fix the metadata that font-patcher mangled   (* AFTER patching)
         detect weight + italic from metadata; rewrite name (1/2/4/6/16/17), macStyle/fsSelection,
         post / CFF ItalicAngle, and the CFF font name -> unify under family "Titillium Nerd Font Upright"
         [+ --install: copy to ~/Library/Fonts, flush fontd, register at .user scope]
@@ -172,8 +199,9 @@ Equivalent to `00-run-all.sh`, if you'd rather run each stage yourself.
 
 - **Step 1 — generate.** The upright faces are upright, so the *slant* must come from the real `Titillium-<W>Italic.otf`; the upright face only lends its `name` table so the two share a family and form an upright/italic pair. The generated `*UprightItalic.otf` is given the correct italic flags on purpose (this is not dirt). The upright face is also copied into `up/` unchanged, ready for patching.
 - **Step 2 — clean the sources (before patch).** Titillium's upright OTFs ship with leftover italic metadata (`ItalicAngle = -13`, a stray BOLD bit, etc.). This strips it so the upright is genuinely upright by the time font-patcher sees it.
-- **Step 3 — patch.** font-patcher adds the Nerd Font glyph set to *both* the upright and the upright-italic, writing the results to `up/nf/`.
-- **Step 4 — fix (after patch).** font-patcher re-mangles names/flags (and can drop `Upright` from the family), so this rewrites them to the clean target, deciding weight + italic from the **metadata**, not the filename. `--install` then deploys and refreshes the cache.
+- **Step 3 — repair guillemets (before patch).** The Regular upright's `«`/`»` are drawn as a single chevron; this transplants the correct double chevron from `Titillium-<W>.otf` so the fix is baked in before patching. Idempotent, so the other weights pass through untouched.
+- **Step 4 — patch.** font-patcher adds the Nerd Font glyph set to *both* the upright and the upright-italic, writing the results to `up/nf/`.
+- **Step 5 — fix (after patch).** font-patcher re-mangles names/flags (and can drop `Upright` from the family), so this rewrites them to the clean target, deciding weight + italic from the **metadata**, not the filename. `--install` then deploys and refreshes the cache.
 
 > **Why clean twice (before *and* after the patch)?** Step 4 decides italic-ness from metadata, not the filename. If Step 2 were skipped, the upright's leftover `ItalicAngle = -13` would survive patching and Step 4's `is_italic()` would misclassify the upright as italic. Step 2 removes that misleading signal *before* font-patcher runs; Step 4 then repairs whatever font-patcher itself mangles.
 
@@ -188,14 +216,17 @@ cd ~/Desktop/titillium/up
 # 2) clean the upright sources' dirty italic metadata
 ./02-fix-upright-source.py
 
-# 3) patch Nerd Font glyphs into up/nf/  (adjust path to your nerd-fonts clone)
+# 3) repair single-chevron «/» on the upright sources
+./04-fix-guillemet.py . --root=..
+
+# 4) patch Nerd Font glyphs into up/nf/  (adjust path to your nerd-fonts clone)
 PATCHER=~/git/nerd-fonts/font-patcher
 mkdir -p nf
 for f in Titillium-*Upright.otf Titillium-*UprightItalic.otf; do
   fontforge -script "$PATCHER" "$f" --complete --careful --outputdir nf
 done
 
-# 4) fix patched metadata, then install + register
+# 5) fix patched metadata, then install + register
 ./03-fix-nf.py --install
 ```
 
@@ -290,6 +321,7 @@ Then re-check with [Verify it worked](#verify-it-worked). If a face **still** re
 - **`fc-match` is right but the browser is wrong** — that's the CoreText/`fontd` layer, not fontconfig. Re-run `--install`.
 - **`<b>` / `font-weight: bold` renders un-bold (and isn't slanted)** — that upright Bold face is being reported *italic* by CoreText (signature `italic=Y slant≈0.08x`), so `bold` resolves to Bold Italic. Diagnose with [Diagnose a false italic reading](#diagnose-a-false-italic-reading); the usual culprit is the `head.macStyle` italic bit (`0x02`) set by mistake.
 - **`./00-run-all.sh: Permission denied`** — the execute bit isn't set (e.g. `chmod` is aliased to `sudo chmod` in your shell). Either run via the interpreter (`bash 00-run-all.sh ...`, `python3 03-fix-nf.py ...`) or set the bit with the real binary: `/bin/chmod +x *.sh *.py`.
+- **`»` shows as a single `>` (Regular only)** — the Regular upright `«`/`»` glyphs ship as a single chevron (one contour). Run `04-fix-guillemet.py` (pipeline step 3) to transplant the double chevron from `Titillium-Regular.otf`; it also fixes an already-installed face in place (`./04-fix-guillemet.py ~/Library/Fonts/TitilliumNerdFont-UprightRegular.otf --root=/path/to/sources`, then flush the font cache).
 
 ## Pitfalls and dirty-data analysis
 
