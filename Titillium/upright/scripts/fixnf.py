@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-"""Normalise font-patcher (Nerd Font) output metadata for the Upright family.
+"""Unify font-patcher output into the "Titillium Nerd Font Upright" family.
 
-font-patcher mangles naming/flags (especially for the italic face) and carries
-over Titillium's dirty CFF ItalicAngle. This rewrites every patched OTF to a
-clean, CoreText-friendly state so that, in a browser:
+font-patcher mangles naming/flags and carries over Titillium's dirty CFF
+ItalicAngle. This rewrites every patched OTF to a clean, CoreText-friendly RIBBI
+state so that, in a browser:
 
     font-family: "Titillium Nerd Font Upright";   -> upright Regular
     font-style:  italic;                          -> the slanted Italic
 
-Weight and italic-ness are detected from the font's own metadata, so it does
-not depend on font-patcher's filenames. All weights share the typographic
-family "Titillium Nerd Font Upright"; Regular/Bold use RIBBI grouping, the rest
-get their own legacy family for old apps.
+Key difference from the old 03-fix-nf.py: italic-ness is taken from *which input
+folder* a face came from (--roman vs --italic), NOT sniffed from the font's own
+metadata. That removes the need to pre-clean the upright sources (their leftover
+ItalicAngle = -13 can no longer fool anything). Weight still comes from
+usWeightClass. Output is written under canonical filenames into --out.
 
 Usage:
-    ./03-fix-nf.py [DIR]                # default DIR=~/Desktop/titillium/up/nf
-    ./03-fix-nf.py [DIR] --install      # also copy to ~/Library/Fonts, flush
-                                        # fontd, and register at .user scope
-    ./03-fix-nf.py [DIR] --dry-run      # print intended changes, write nothing
+    ./fixnf.py --roman DIR --italic DIR --out DIR [--install] [--dry-run]
 """
 import os
 import sys
@@ -55,15 +53,6 @@ def weight_of(wc):
     return WCLASS.get(wc) or WCLASS[min(WCLASS, key=lambda k: abs(k - wc))]
 
 
-def is_italic(font):
-    if font["head"].macStyle & ITALIC_MS:
-        return True
-    if abs(font["post"].italicAngle) > 0.01:
-        return True
-    sub = (get_name(font, 17) or get_name(font, 2) or "").lower()
-    return "italic" in sub or "oblique" in sub
-
-
 def nf_names(weight, italic):
     typo_sub = (("" if weight == "Regular" else weight)
                 + (" Italic" if italic else "")).strip() or "Regular"
@@ -81,6 +70,12 @@ def nf_names(weight, italic):
                 + ("Italic" if italic else ("Regular" if weight == "Regular" else ""))) or "Regular"
     n6 = f"TitilliumNF-Upright{ps_style}"
     return n1, n2, n4, n6, FAMILY, typo_sub
+
+
+def font_filename(weight, italic):
+    style = (("" if weight == "Regular" else weight)
+             + ("Italic" if italic else ("Regular" if weight == "Regular" else ""))) or "Regular"
+    return f"TitilliumNerdFont-Upright{style}.otf"
 
 
 def apply_style(font, italic, bold):
@@ -105,17 +100,18 @@ def apply_style(font, italic, bold):
         font["CFF "].cff.topDictIndex[0].ItalicAngle = int(angle)
 
 
-def fix(path, dry=False):
+def fix_one(path, italic, out_dir, dry=False):
     font = TTFont(path)
     weight = weight_of(font["OS/2"].usWeightClass)
-    italic = is_italic(font)
     bold = font["OS/2"].usWeightClass >= 700
+    role = "italic" if italic else "roman "
 
     n1, n2, n4, n6, n16, n17 = nf_names(weight, italic)
+    dst = os.path.join(out_dir, font_filename(weight, italic))
     if dry:
-        print(f"[dry-run] {os.path.basename(path):42s} -> {n1} / {n2}  [{n6}]  "
-              f"angle={-13.0 if italic else 0.0}")
-        return n6
+        print(f"[dry-run] {os.path.basename(path):40s} [{role}] -> {n1} / {n2}  "
+              f"[{n6}]  angle={-13.0 if italic else 0.0}  => {os.path.basename(dst)}")
+        return dst
 
     set_name(font, 1, n1)
     set_name(font, 2, n2)
@@ -127,9 +123,9 @@ def fix(path, dry=False):
     if "CFF " in font:
         font["CFF "].cff.fontNames[0] = n6
 
-    font.save(path)
-    print(f"fixed {os.path.basename(path):42s} -> {n1} / {n2}  [{n6}]")
-    return n6
+    font.save(dst)
+    print(f"fixed {os.path.basename(path):40s} [{role}] -> {n1} / {n2}  [{n6}]  => {os.path.basename(dst)}")
+    return dst
 
 
 def install(paths):
@@ -141,8 +137,8 @@ def install(paths):
         subprocess.run(["/bin/cp", "-f", p, d], check=True)
         dests.append(d)
 
-    subprocess.run(["rm", "-rf", os.path.join(home, "Library", "Caches", "com.apple.FontRegistry")])
-    subprocess.run(["killall", "fontd"], stderr=subprocess.DEVNULL)
+    subprocess.run( ["rm", "-rf", os.path.join(home, "Library", "Caches", "com.apple.FontRegistry")], check=False )
+    subprocess.run( ["killall", "fontd"], stderr=subprocess.DEVNULL, check=False )
 
     arr = ",\n".join(f'  "{d}"' for d in dests)
     swift = (
@@ -156,37 +152,71 @@ def install(paths):
         "  print(\"register \\((p as NSString).lastPathComponent): \\(ok)\")\n"
         "}\n"
     )
-    tf = tempfile.NamedTemporaryFile("w", suffix=".swift", delete=False)
-    tf.write(swift)
-    tf.close()
-    print("--- installing + registering (.user scope) ---")
-    subprocess.run(["swift", tf.name])
-    os.unlink(tf.name)
+    with tempfile.NamedTemporaryFile( "w", suffix=".swift", delete=False ) as tf:
+        tf.write(swift)
+        tf_name = tf.name
+    print( "--- installing + registering (.user scope) ---" )
+    try:
+        subprocess.run( ["swift", tf_name], check=True )
+    finally:
+        os.unlink(tf_name)
     print("done. Fully quit and reopen the browser to pick up the change.")
 
 
+def parse_args(argv):
+    roman = italic = out = None
+    dry = install_flag = False
+    it = iter(argv)
+    for a in it:
+        if a == "--roman":
+            roman = next(it, None)
+        elif a == "--italic":
+            italic = next(it, None)
+        elif a == "--out":
+            out = next(it, None)
+        elif a.startswith("--roman="):
+            roman = a.split("=", 1)[1]
+        elif a.startswith("--italic="):
+            italic = a.split("=", 1)[1]
+        elif a.startswith("--out="):
+            out = a.split("=", 1)[1]
+        elif a == "--dry-run":
+            dry = True
+        elif a == "--install":
+            install_flag = True
+        else:
+            print("unknown arg:", a)
+            sys.exit(2)
+    if not roman or not italic or not out:
+        print("usage: fixnf.py --roman DIR --italic DIR --out DIR [--install] [--dry-run]")
+        sys.exit(2)
+    return (os.path.expanduser(roman), os.path.expanduser(italic),
+            os.path.expanduser(out), dry, install_flag)
+
+
+def faces(d):
+    return sorted(glob.glob(os.path.join(d, "*.otf")) + glob.glob(os.path.join(d, "*.ttf")))
+
+
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    flags = {a for a in sys.argv[1:] if a.startswith("--")}
-    target = os.path.expanduser(args[0] if args else "~/Desktop/titillium/up/nf")
+    roman, italic, out, dry, install_flag = parse_args(sys.argv[1:])
+    if not dry:
+        os.makedirs(out, exist_ok=True)
 
-    dry = "--dry-run" in flags
-
-    files = sorted(glob.glob(os.path.join(target, "*.otf")) + glob.glob(os.path.join(target, "*.ttf")))
-    if not files:
-        print("no patched fonts found in", target)
+    jobs = [(p, False) for p in faces(roman)] + [(p, True) for p in faces(italic)]
+    if not jobs:
+        print(f"no patched fonts found in {roman} or {italic}")
         return
 
-    fixed = []
-    for path in files:
-        fix(path, dry=dry)
-        fixed.append(path)
+    produced = []
+    for path, is_it in jobs:
+        produced.append(fix_one(path, is_it, out, dry=dry))
 
-    if "--install" in flags:
+    if install_flag:
         if dry:
             print("[dry-run] would copy to ~/Library/Fonts, flush fontd, register (.user)")
         else:
-            install(fixed)
+            install(produced)
 
 
 if __name__ == "__main__":

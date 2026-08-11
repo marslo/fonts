@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-"""Repair single-chevron guillemets («/») on the upright faces.
+"""Repair single-chevron guillemets («/») on upright faces.
 
 Titillium's Regular *Upright* source draws guillemotleft/guillemotright with a
 single chevron (one contour) instead of the usual double chevron (two
 contours), so `»` shows as a lone `>`. Every other face (the normal
-Titillium-<W>.otf and the other Upright weights) is fine.
+Titillium-<W>.otf and the other Upright weights) already ships the double
+chevron.
 
-Transplants the correct double-chevron outline from a same-weight donor
-(FONT_ROOT/Titillium-<W>.otf, the upright non-italic face; weight read from the
-target's usWeightClass) into any target whose guillemet is missing or has fewer
-than two contours. The bug only affects upright faces -- every italic face
-already ships a double chevron and is skipped -- so the upright donor is always
-the right source; pass --donor=FILE to override. Idempotent: faces that already
-carry a double chevron are left untouched (use --force to override). Only
+Transplants the correct double-chevron outline (CFF charstring + hmtx, metadata
+untouched) from a same-weight donor Titillium-<W>.otf -- weight read from the
+target's usWeightClass -- into any target whose guillemet is missing or has
+fewer than two contours. The bug only affects upright faces; every italic face
+already carries a double chevron and is skipped, so the upright donor is always
+right. Idempotent: correct faces are left alone (use --force to override). Only
 CFF/OTF targets are handled.
 
-Usage:
-    ./04-fix-guillemet.py [DIR|FILE ...] [--root=FONT_ROOT] [--donor=FILE]
-                          [--force] [--dry-run]
-      # default target DIR=~/Desktop/titillium/up  (the staged upright sources)
-      # default donor  --root=~/Desktop/titillium  (the normal Titillium faces)
+Importable: prep.py calls `fix()` directly. Standalone:
+
+    ./guillemet.py [DIR|FILE ...] [--root=DONOR_DIR] [--donor=FILE] [--force] [--dry-run]
+      # default target DIR=. ; default donor --root=. (the normal Titillium faces)
 """
 import os
 import sys
@@ -38,6 +37,7 @@ def weight_of(wc):
 
 
 def donor_for(font, donor_dir):
+    # always the upright (non-italic) donor; the bug never hits italic faces
     return os.path.join(donor_dir, f"Titillium-{weight_of(font['OS/2'].usWeightClass)}.otf")
 
 
@@ -80,13 +80,13 @@ def transplant(target, donor, scale, force, dry):
     return changed
 
 
-def fix(path, donor_dir, donor_file, force, dry):
+def fix(path, donor_dir=".", donor_file=None, force=False, dry=False):
     font = TTFont(path)
     base = os.path.basename(path)
     if "CFF " not in font:
         print(f"skip  {base}  (not CFF/OTF)")
         return
-    donor_path = donor_file or donor_for(font, donor_dir)
+    donor_path = donor_file or donor_for(font, os.path.expanduser(donor_dir))
     if not os.path.isfile(donor_path):
         print(f"skip  {base}  (no donor {os.path.basename(donor_path)})")
         return
@@ -106,7 +106,7 @@ def fix(path, donor_dir, donor_file, force, dry):
 
 
 def iter_targets(args):
-    for a in (args or ["~/Desktop/titillium/up"]):
+    for a in (args or ["."]):
         p = os.path.expanduser(a)
         if os.path.isdir(p):
             for f in sorted(glob.glob(os.path.join(p, "*.otf")) +
@@ -121,7 +121,7 @@ def iter_targets(args):
 def main():
     dry = "--dry-run" in sys.argv
     force = "--force" in sys.argv
-    donor_dir = "~/Desktop/titillium"
+    donor_dir = "."
     donor_file = None
     targets = []
     for a in sys.argv[1:]:
@@ -137,7 +137,6 @@ def main():
         else:
             targets.append(a)
 
-    donor_dir = os.path.expanduser(donor_dir)
     files = list(iter_targets(targets))
     if not files:
         print("no target fonts found")
