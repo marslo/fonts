@@ -67,6 +67,8 @@ class FontnameTools:
             'book':         '',
             'ce':           'CE',
             'normal':       'Regular',
+            'powerline':    'Powerline',
+            'forpowerline': 'ForPowerline',
         }
         return known_names.get(style_name.lower(), style_name)
 
@@ -125,21 +127,23 @@ class FontnameTools:
     @staticmethod
     def make_oblique_style(weights, styles):
         """Move "Oblique" from weights to styles for font naming purposes"""
-        if 'Oblique' in weights:
-            weights = list(weights)
-            weights.remove('Oblique')
-            styles = list(styles)
-            styles.append('Oblique')
+        for oblique in FontnameTools.known_slopes.keys(): # 'Oblique', 'Slanted'...
+            if oblique in weights:
+                weights = list(weights)
+                weights.remove(oblique)
+                styles = list(styles)
+                styles.append(oblique)
         return (weights, styles)
 
     @staticmethod
     def get_name_token(name, tokens):
         """Try to find any case insensitive token from tokens in the name, return tuple with found token-list and rest"""
-        # The default mode (allow_regex_token = False) will try to find any verbatim string in the
+        # First will try to find any verbatim string in the
         # tokens list (case insensitive matching) and give that tokens list item back with
         # unchanged case (i.e. [ 'Bold' ] will match "bold" and return it as [ 'Bold', ]
-        # In the regex mode (allow_regex_token = True) it will use the tokens elements as
+        # Otherwise it will use the tokens elements as
         # regexes and return the original (i.e. from name) case.
+        # (This is both done on parallel.)
         #
         # Token are always used in a regex and may not capture, use non capturing
         # grouping if needed (?: ... )
@@ -189,6 +193,7 @@ class FontnameTools:
         ( '(b)itstream( ?)(v)era( ?sans ?mono)?', r'\1itstrom\2Wera' ),
         ( '(c)ascadia( ?)(c)ode',       r'\1askaydia\2\3ove' ),
         ( '(c)ascadia( ?)(m)ono',       r'\1askaydia\2\3ono' ),
+        ( '(d2)( ?)coding(.*)',         r'\1\2Koding\3' ),
         ( 'Gohufont',                   r'GohuFont'), # Correct to CamelCase
         ( '(h)ermit',                   r'\1urmit' ),
         ( '(h)asklig',                  r'\1asklug' ),
@@ -208,6 +213,7 @@ class FontnameTools:
         ( '(.*code ?lat)in',            r'\1'), # for 'M PLUS Code Latin'
         ( '(b)ig( ?)(b)lue( ?)(t)erminal', r'\1ig\3lue\5erm'), # Shorten BigBlueTerminal
         ( '(.*)437TT',                  r'\g<1>437'), # Shorten BigBlueTerminal 437 TT even further
+        ( '(annotation ?m)ono',         r'\1'), # Annotation Mono -> Annotation M
         ( '(.*dyslexic ?alt)a',         r'\1'), # Open Dyslexic Alta -> Open Dyslexic Alt
         ( '(.*dyslexic ?m)ono',         r'\1'), # Open Dyslexic Mono -> Open Dyslexic M
         ( '(overpass ?m)ono',           r'\1'), # Overpass Mono -> Overpass M
@@ -264,13 +270,16 @@ class FontnameTools:
         'Narrow': ('Nr', 'Narrow'),
         'Compact': ('Ct', 'Compact'),
     }
-    known_slopes = { # can not take modifiers
+    known_slope_types = { # can not take modifiers
         'Inclined': ('Ic', 'Incl'),
         'Oblique': ('Obl', 'Obl'),
         'Italic': ('It', 'Italic'),
-        'Upright': ('Up', 'Uprght'),
         'Kursiv': ('Ks', 'Kurs'),
         'Sloped': ('Sl', 'Slop'),
+        'Slanted': ('St', 'Slnt'),
+    }
+    known_slopes = known_slope_types | { # can not take modifiers
+        'Upright': ('Up', 'Uprght'),
     }
     known_modifiers = {
         'Demi': ('Dm', 'Dem'),
@@ -420,7 +429,7 @@ class FontnameTools:
         weights = [ w for w in weights if w not in FontnameTools.known_styles ]
         # Some font specialities:
         other = [
-            '-', 'Book', 'For', 'Powerline',
+            '-', 'Book', r'(?:for[- ])?powerline',
             'IIx',              # Profont IIx
             'LGC',              # Inconsolata LGC
             r'\bCE\b',          # ProggycleanTT CE
