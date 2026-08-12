@@ -26,20 +26,19 @@
 $ brew install fontforge
 ```
 
-- font-patcher [v3.2.1.1](https://github.com/marslo/fonts/releases/tag/v3.2.1.1) | [changelog](https://github.com/marslo/fonts/releases/tag/untagged-46572d85c7f7bd03c993)
+- font-patcher [v3.5.0.1](https://github.com/marslo/fonts/releases/tag/v3.5.0.1)
 
   ```
   $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
 
-  # download v3.2.1.1
-  $ curl -o FontPatcher.zip \
-         -fsSL https://github.com/marslo/fonts/releases/download/v3.2.1.1/FontPatcher.v3.2.1.1.zip
+  # download
+  $ curl -o FontPatcher.zip -fsSL https://github.com/marslo/fonts/releases/download/v3.5.0.1/FontPatcher.v3.5.0.1.zip
   $ unzip -o FontPatcher.zip /opt/FontPatcher
   ## or download and extract in one-line command, `bsdtar` is required
-  $ curl -fsSL https://github.com/marslo/fonts/releases/download/v3.2.1.1/FontPatcher.v3.2.1.1.zip |
+  $ curl -fsSL https://github.com/marslo/fonts/releases/download/v3.5.0.1/FontPatcher.v3.5.0.1.zip |
     bsdtar xzf - -C /opt/FontPatcher
   ## or via clone
-  $ git clone --branch v3.2.1.1 https://github.com/marslo/fonts.git /opt/FontPatcher
+  $ git clone --single-branch --branch v3.5.0.1 https://github.com/marslo/fonts.git /opt/FontPatcher
 
   # environment variable to make `font-patcher` as system command line
   $ echo "test -d '/opt/FontPatcher' && export PATH=\"\$PATH:/opt/FontPatcher\"" >> ~/.bashrc
@@ -48,17 +47,17 @@ $ brew install fontforge
 - setup auto completion
   ```bash
   # osx
-  $ cp completion/font-patcher.sh $(brew --prefix)/etc/bash_completion.d/
+  $ cp completion/font-patcher.bash $(brew --prefix)/etc/bash_completion.d/
 
   # ubuntu/centos/wsl
-  $ cp completion/font-patcher.sh /usr/share/bash-completion/completions/
+  $ cp completion/font-patcher.bash /usr/share/bash-completion/completions/
   # or
-  $ cp completion/font-patcher.sh /etc/bash_completion.d/
+  $ cp completion/font-patcher.bash /etc/bash_completion.d/
   ```
 
-  ![font-patcher 3.2.1.1 auto completion](https://github.com/marslo/fonts/raw/main/screenshots/font-patcher-v3.2.1.1-auto-completion.png)
+  ![font-patcher bash completion](https://github.com/marslo/fonts/raw/main/screenshots/font-patcher-v3.2.1.1-auto-completion.png)
 
-- [v3.2.1](https://github.com/ryanoasis/nerd-fonts/tree/v3.2.1) | [changelog](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.2.1)
+- [v3.5.0](https://github.com/ryanoasis/nerd-fonts/tree/v3.5.0) | [changelog](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.5.0)
   ```bash
   $ [[ -d /opt/FontPatcher ]] || mkdir -p /opt/FontPatcher
   $ curl -o FontPatcher.zip \
@@ -109,6 +108,55 @@ $ brew install fontforge
 
 [![build.sh](https://github.com/marslo/fonts/raw/main/screenshots/font-build.sh--help.png)](https://github.com/marslo/fonts/raw/fonts/build.sh)
 
+| TYPE             | DIR                       | --all COVERED | MANUAL BUILD                                                                                            | MANUAL INSTALL                      |
+| ---------------- | ------------------------- | :-----------: | ------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| mono             | **Operator (Mono*NF)**    |       √       | `bash build.sh --operator-mono`                                                                         | `bash install.sh Operator`          |
+| sans             | **Operator (ProNF)**      |       √       | `bash build.sh --operator-pro`                                                                          | `bash install.sh Operator`          |
+| sans             | **Recursive (DesktopNF)** |       √       | `bash build.sh --recursive-desktop`                                                                     | `bash install.sh Recursive`         |
+| mono             | **Recursive (CodeNF)**    |       √       | `bash build.sh --recursive-mono`                                                                        | `bash install.sh Recursive`         |
+| mono             | **ComicMono**             |       √       | `bash build.sh --mono --path ComicMono`                                                                 | `bash install.sh ComicMono`         |
+| cn (mono)        | **LXGW-WenKai/mono**      |       √       | `bash build.sh --mono --path LXGW-WenKai/mono`                                                          | `bash install.sh LXGW-WenKai`       |
+| mono             | **VictorMono**            |       √       | `bash build.sh --mono --path VictorMono`                                                                | `bash install.sh VictorMono`        |
+| mono             | **audiolink/console**     |       √       | `bash build.sh --mono --path audiolink/console`                                                         | `bash install.sh audiolink`         |
+| mono             | **audiolink/mono**        |       √       | `bash build.sh --mono --path audiolink/mono`                                                            | `bash install.sh audiolink`         |
+| mono             | **monaspace/radon**       |       √       | `bash build.sh --mono --path monaspace/radon`                                                           | `bash install.sh monaspace`         |
+| mono             | **Monaco**                |       √       | `bash build.sh --monaco`                                                                                | `bash install.sh Monaco`            |
+| mono             | **Lekton**                |       √       | `bash build.sh --mono --path Lekton`                                                                    | `bash install.sh Lekton`            |
+| mono             | **MonoLisa**              |       √       | `bash build.sh --mono --path MonoLisa`                                                                  | `bash install.sh MonoLisa`          |
+| mono             | **agave**                 |       √       | `bash build.sh --mono --path agave`                                                                     | `bash install.sh agave`             |
+| mono             | **iosevka**               |       √       | `bash build.sh --mono --path iosevka/marslo`<br>`bash build.sh --mono --path iosevka/ss15`              | `bash install.sh iosevka`           |
+| mono             | **menlo**                 |       √       | `bash build.sh --mono --path menlo`                                                                     | `bash install.sh menlo`             |
+| mono             | **monofur**               |       √       | `bash build.sh --mono --path monofur`                                                                   | `bash install.sh monofur`           |
+| mono             | **spleen**                |       √       | `bash build.sh --mono --path spleen`                                                                    | `bash install.sh spleen`            |
+| mono             | **iAWriterMonoS**         |       √       | `bash build.sh --mono --path iAWriterMonoS`                                                             | `bash install.sh iAWriterMonoS`     |
+| upright (sans)   | **Titillium/upright**     |       √       | `bash build.sh --titillium-upright`                                                                     | `bash install.sh Titillium/upright` |
+| sans             | **Titillium**             |       √       | `bash build.sh --sans --path Titillium`                                                                 | `bash install.sh Titillium`         |
+| sans             | **Candara**               |       √       | `bash build.sh --sans --path Candara`                                                                   | `bash install.sh Candara`           |
+| sans             | **Gisha**                 |       √       | `bash build.sh --sans --path Gisha`                                                                     | `bash install.sh Gisha`             |
+| sans             | **Grandstander**          |       √       | `bash build.sh --sans --path Grandstander`                                                              | `bash install.sh Grandstander`      |
+| sans             | **NotoSansSC**            |       √       | `bash build.sh --sans --path NotoSansSC`                                                                | `bash install.sh NotoSansSC`        |
+| sans             | **iAWriterQuattroS**      |       √       | `bash build.sh --sans --path iAWriterQuattroS --ext otf --ext ttf`                                      | `bash install.sh iAWriterQuattroS`  |
+| sans             | **Orbitron**              |       √       | `bash build.sh --sans --path Orbitron --ext otf --ext ttf`                                              | `bash install.sh Orbitron`          |
+| sans             | **msyh**                  |       √       | `bash build.sh --sans --path msyh --ext otf --ext ttf`                                                  | `bash install.sh msyh`              |
+| cn (sans)        | **LXGW-WenKai/bright**    |       √       | `bash build.sh --sans --path LXGW-WenKai/bright --ext otf --ext ttf`                                    | `bash install.sh LXGW-WenKai`       |
+| cn (sans)        | **LXGW-WenKai/sans**      |       √       | `bash build.sh --sans --path LXGW-WenKai/sans --ext otf --ext ttf`                                      | `bash install.sh LXGW-WenKai`       |
+| cn (sans)        | **Yozai**                 |       √       | `bash build.sh --sans --path Yozai --ext otf --ext ttf`                                                 | `bash install.sh Yozai`             |
+| handwrite (sans) | **Papyrus**               |       √       | `bash build.sh --sans --path Papyrus`                                                                   | `bash install.sh Papyrus`           |
+| handwrite (sans) | **segoe-print**           |       √       | `bash build.sh --sans --path segoe-print`                                                               | `bash install.sh segoe-print`       |
+| handwrite (sans) | **BradleyHandITC**        |       √       | `bash build.sh --sans --path BradleyHandITC`                                                            | `bash install.sh BradleyHandITC`    |
+|                  |                           |               |                                                                                                         |                                     |
+| cn (sans)        | **Shayufeite**            |       ✗       | `bash build.sh --sans --path Shayufeite --ext otf --ext ttf -- --name 'YosheShayufeite Nerd Font'`      | `bash install.sh Shayufeite`        |
+| cn (sans)        | **QianLiJiangShan**       |       ✗       | `bash build.sh --sans --path QianLiJiangShan --ext otf --ext ttf -- --name 'QianLiJiangShan Nerd Font'` | `bash install.sh QianLiJiangShan`   |
+
+| SCENARIO                                          | SANS              | MONO        |
+| ------------------------------------------------- | ----------------- | ----------- |
+| _DEFAULT_                                         | `ttf`             | `otf` `ttf` |
+| `--ext otf`                                       | `otf`             | `otf`       |
+| `--ext otf,ttf`                                   | `otf` `ttf`       | `otf` `ttf` |
+| `-- -ext otf` (passthrough)                       | `otf`             | `otf`       |
+| `-- -ext otf -ext ttf` (invalid for font-patcher) | `ttf` (last-wins) | `ttf`       |
+| `--ext otf -- -ext ttf` (union)                   | `otf` `ttf`       | `otf` `ttf` |
+
 ### Operator
 - mono
 
@@ -119,14 +167,10 @@ $ brew install fontforge
         [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
         echo ".. ${_e} » $(basename ${_f}) » ${outpath}";
         font-patcher "$(realpath "${_f}")" \
-                     --mono --complete --careful --quiet \
+                     --mono --complete --careful --quiet --no-progressbars \
                      -ext "${_e}" -out "${outpath}" 2>/dev/null;
       done
-    done < <(fd . Operator/OperatorMono \
-                  Operator/OperatorMonoLig \
-                  Operator/OperatorMonoSSmLig \
-                  -tf -e ttf -e otf
-            )
+    done < <( fd . Operator/OperatorMono Operator/OperatorMonoLig Operator/OperatorMonoSSmLig -tf -e ttf -e otf )
   ```
 
 - Pro
@@ -159,10 +203,10 @@ $ while read -r _f; do
       [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
       echo ".. ${_e} » $(basename ${_f}) » ${outpath}";
       font-patcher "$(realpath ${_f}")"  \
-                   --mono --complete --careful --quiet \
+                   --mono --complete --careful --quiet --no-progressbars \
                    -ext "${_e}" -out "${outpath}" 2>/dev/null";
     done
-  done < <(fd -u -tf -e ttf -e otf --full-path ./Monaco)
+  done < <( fd -u -tf -e ttf -e otf --full-path ./Monaco )
 ```
 
 ### [iosevka](https://github.com/be5invis/iosevka)
@@ -215,7 +259,7 @@ $ bash build.sh --mono --path iosevka
       [[ -d "${outpath}" ]] || mkdir -p "${outpath}";
       for _e in otf ttf; do
         echo ".. ${_e} » $(basename ${_f}) » ${outpath}";
-        font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out "${outpath}";
+        font-patcher $(realpath "${_f}") --mono --complete --quiet --no-progressbars -ext ${_e} -out "${outpath}";
       done;
     done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Code/)
   ```
@@ -236,7 +280,7 @@ $ bash build.sh --mono --path iosevka
       for _e in otf ttf; do
         [[ -d "${outpath}/${_e}" ]] || mkdir -p "${outpath}/${_e}";
         echo ".. ${_e} » $(basename "${_f}") » ${outpath}";
-        font-patcher "$(realpath "${_f}")" --complete --quiet -ext ${_e} -out "${outpath}/${_e}" --name "\"${name}\""
+        font-patcher "$(realpath "${_f}")" --complete --quiet --no-progressbars -ext ${_e} -out "${outpath}/${_e}" --name "\"${name}\""
       done
     done < <(fd -u -tf -e ttf -e otf --full-path Recursive/Recursive_Desktop/)
   ```
@@ -246,7 +290,7 @@ $ bash build.sh --mono --path iosevka
 $ while read -r _f; do
     for _e in otf ttf; do
       echo ".. ${_e} >> $(basename ${_f})";
-      font-patcher $(realpath "${_f}") --mono --complete --quiet -ext ${_e} -out ../VictorMono;
+      font-patcher $(realpath "${_f}") --mono --complete --quiet --no-progressbars -ext ${_e} -out ../VictorMono;
     done;
   done < <(fd -u -tf -e ttf -e otf --full-path VictorMono/)
 ```

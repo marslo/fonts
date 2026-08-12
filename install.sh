@@ -4,7 +4,7 @@
 #     FileName : install.sh
 #       Author : marslo
 #      Created : 2024-04-16 01:39:12
-#   LastChange : 2026-08-11 22:40:32
+#   LastChange : 2026-08-12 02:41:39
 #=============================================================================
 
 set -euo pipefail
@@ -45,7 +45,7 @@ fi
 declare -A fontMeta=(
   [Candara]='sans:normal'
   [Gisha]='sans:normal'
-  [Titillium]='sans:normal'
+  [Titillium]='sans:normal;sans:otf:upright'
   [Grandstander]='sans:normal'
   [Recursive]='sans:otf:*DesktopNF/*;mono:otf:RecursiveCodeNF/RecMonoCasual'
   [Operator]='sans:otf:*ProNF/otf;mono:otf:*Mono*NF/otf'
@@ -214,7 +214,7 @@ function copyFonts() {
   [[ "${#tags[@]}" -eq 1 ]] && tag="${tags[0]}" || tag="${tags[0]}::${tags[1]}"
 
   # shellcheck disable=SC2206
-  declare -a fontInfo=( ${srcDesc//\//} )
+  declare -a fontInfo=( ${srcDesc//\//::} )
 
   # candidate glob: --force uses the metadata format (exact); refresh mode is
   # format-agnostic so an installed .ttf face is refreshed from repo .ttf and is
