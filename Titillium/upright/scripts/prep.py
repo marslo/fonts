@@ -16,7 +16,10 @@ The role (roman vs italic) is carried by the build subfolder and read back by
 fixnf.py, so no italic detection from (possibly dirty) metadata is ever needed.
 
 Usage:
-    ./prep.py --src DIR --build DIR [--dry-run]
+    ./prep.py --src DIR [--src DIR ...] --build DIR [--dry-run]
+
+--src is repeatable; each weight's Upright/Italic face is looked up across the
+given dirs in order (first match wins).
 """
 import os
 import sys
@@ -30,31 +33,51 @@ WEIGHTS = ["Thin", "Light", "Regular", "Semibold", "Bold"]
 
 
 def parse_args(argv):
-    src = build = None
+    srcs = []
+    build = None
     dry = False
     it = iter(argv)
     for a in it:
         if a == "--src":
-            src = next(it, None)
+            v = next(it, None)
+            if v is not None:
+                srcs.append(v)
+        elif a.startswith("--src="):
+            srcs.append(a.split("=", 1)[1])
         elif a == "--build":
             build = next(it, None)
-        elif a == "--dry-run":
-            dry = True
-        elif a.startswith("--src="):
-            src = a.split("=", 1)[1]
         elif a.startswith("--build="):
             build = a.split("=", 1)[1]
+        elif a == "--dry-run":
+            dry = True
         else:
             print("unknown arg:", a)
             sys.exit(2)
-    if not src or not build:
-        print("usage: prep.py --src DIR --build DIR [--dry-run]")
+    if not srcs or not build:
+        print("usage: prep.py --src DIR [--src DIR ...] --build DIR [--dry-run]")
         sys.exit(2)
-    return os.path.expanduser(src), os.path.expanduser(build), dry
+    return [os.path.expanduser(s) for s in srcs], os.path.expanduser(build), dry
+
+
+def find_in(srcs, name):
+    """ Return the first <src>/<name> that exists across the src dirs, else None. """
+    for d in srcs:
+        p = os.path.join(d, name)
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def donor_dir_of(srcs):
+    """ The src dir holding the normal Titillium-<W>.otf faces (guillemet donor). """
+    for d in srcs:
+        if os.path.exists(os.path.join(d, "Titillium-Regular.otf")):
+            return d
+    return srcs[0]
 
 
 def main():
-    src, build, dry = parse_args(sys.argv[1:])
+    srcs, build, dry = parse_args(sys.argv[1:])
     roman_dir = os.path.join(build, "roman")
     italic_dir = os.path.join(build, "italic")
     if not dry:
@@ -63,10 +86,15 @@ def main():
 
     staged_roman = []
     for w in WEIGHTS:
-        up = os.path.join(src, f"Titillium-{w}Upright.otf")
-        ita = os.path.join(src, f"Titillium-{w}Italic.otf")
-        if not (os.path.exists(up) and os.path.exists(ita)):
-            print(f"skip {w}: missing {os.path.basename(up)} or {os.path.basename(ita)}")
+        up = find_in(srcs, f"Titillium-{w}Upright.otf")
+        ita = find_in(srcs, f"Titillium-{w}Italic.otf")
+        if not (up and ita):
+            missing = []
+            if not up:
+                missing.append(f"Titillium-{w}Upright.otf")
+            if not ita:
+                missing.append(f"Titillium-{w}Italic.otf")
+            print(f"skip {w}: missing {' + '.join(missing)} in {', '.join(srcs)}")
             continue
         dst_roman = os.path.join(roman_dir, f"Titillium-{w}Upright.otf")
         dst_italic = os.path.join(italic_dir, f"Titillium-{w}UprightItalic.otf")
@@ -77,12 +105,14 @@ def main():
             continue
         shutil.copyfile(up, dst_roman)
         shutil.copyfile(ita, dst_italic)
-        print(f"staged {w}: roman/{os.path.basename(dst_roman)} + italic/{os.path.basename(dst_italic)}")
+        rseg = f"roman/{os.path.basename(dst_roman)}"
+        print(f"staged {w + ':':<10}{rseg:<38}+ italic/{os.path.basename(dst_italic)}")
         staged_roman.append(dst_roman)
 
+    donor_dir = donor_dir_of(srcs)
     print("--- repairing guillemets on roman faces ---")
     for f in sorted(staged_roman):
-        fix_guillemet(f, donor_dir=src, dry=dry)
+        fix_guillemet(f, donor_dir=donor_dir, dry=dry)
 
 
 if __name__ == "__main__":
