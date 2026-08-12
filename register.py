@@ -16,13 +16,14 @@ Usage:
     ./register-fonts.py --input <file|dir> [--dry-run]
 """
 
+import glob
 import os
 import subprocess
 import sys
 import tempfile
 
 FONT_EXTS = {".otf", ".ttf", ".ttc", ".otc"}
-USAGE = "usage: register-fonts.py --input <file|dir> [--dry-run]"
+USAGE = "usage: register-fonts.py --input <file|dir|glob> [--input ...] [--dry-run]"
 
 
 def fonts_in(d):
@@ -35,14 +36,24 @@ def fonts_in(d):
 
 def resolve_input(path):
     p = os.path.abspath(os.path.expanduser(path))
-    if not os.path.exists(p):
-        sys.exit(f"error: --input path does not exist: {p}")
     if os.path.isdir(p):
         fonts = fonts_in(p)
         if not fonts:
             sys.exit(f"error: no fonts (.otf/.ttf/.ttc/.otc) found in {p}")
         return fonts
-    return [p]
+    if os.path.isfile(p):
+        return [p]
+    # not a plain file/dir -- treat as an ls-style glob (e.g. ~/Library/Fonts/Foo*.otf)
+    if glob.has_magic(p):
+        matches = sorted(
+            m for m in glob.glob(p)
+            if os.path.isfile(m)
+            and os.path.splitext(m)[1].lower() in FONT_EXTS
+        )
+        if not matches:
+            sys.exit(f"error: no fonts matched glob: {p}")
+        return matches
+    sys.exit(f"error: --input path does not exist: {p}")
 
 
 def swift_str(p):
@@ -91,31 +102,41 @@ def flush_and_register(paths, dry=False):
 
 
 def parse_args(argv):
-    inp = None
+    inputs = []
     dry = False
     it = iter(argv)
     for a in it:
         if a == "--input":
-            inp = next(it, None)
+            v = next(it, None)
+            if v is not None:
+                inputs.append(v)
         elif a.startswith("--input="):
-            inp = a.split("=", 1)[1]
+            inputs.append(a.split("=", 1)[1])
         elif a == "--dry-run":
             dry = True
         elif a in ("-h", "--help"):
             print(USAGE)
             sys.exit(0)
+        elif not a.startswith("-"):
+            inputs.append(a)      # bare positional: file, dir, or glob
         else:
             print("unknown arg:", a)
             sys.exit(2)
-    if not inp:
+    if not inputs:
         print(USAGE)
         sys.exit(2)
-    return inp, dry
+    return inputs, dry
 
 
 def main():
-    inp, dry = parse_args(sys.argv[1:])
-    paths = resolve_input(inp)
+    inputs, dry = parse_args(sys.argv[1:])
+    paths = []
+    seen = set()
+    for inp in inputs:
+        for p in resolve_input(inp):
+            if p not in seen:
+                seen.add(p)
+                paths.append(p)
     flush_and_register(paths, dry=dry)
 
 

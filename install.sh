@@ -2,28 +2,29 @@
 # shellcheck source=/dev/null
 #=============================================================================
 #     FileName : install.sh
-#       Author : marslo.jiao@gmail.com
+#       Author : marslo
 #      Created : 2024-04-16 01:39:12
-#   LastChange : 2025-06-24 15:08:53
+#   LastChange : 2026-08-11 22:40:32
 #=============================================================================
 
 set -euo pipefail
 
 # @credit: https://github.com/ppo/bash-colors
-# @usage:  or copy & paste the `c()` function from:
-#          https://github.com/ppo/bash-colors/blob/master/bash-colors.sh#L3
-if [[ -f "${HOME}/.marslo/bin/bash-color.sh" ]]; then
-  source "${HOME}/.marslo/bin/bash-color.sh"
-else
-  function c() { :; }
-fi
+# shellcheck disable=SC2015,SC2059
+c() { [ $# == 0 ] && printf "\033[0m" || printf "$1" | sed 's/\(.\)/\1;/g;s/\([SDIUFNHT]\)/2\1/g;s/\([KRGYBMCW]\)/3\1/g;s/\([krgybmcw]\)/4\1/g;y/SDIUFNHTsdiufnhtKRGYBMCWkrgybmcw/12345789123457890123456701234567/;s/^\(.*\);$/\\033[\1m/g'; }
 
 # shellcheck disable=SC2155
 declare -r ME="$(basename "${BASH_SOURCE[0]:-$0}")"
+# shellcheck disable=SC2155
+declare -r SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]:-$0}" )" && pwd )"
+declare -r REGISTER="${SCRIPT_DIR}/register.py"
 declare -A typeFlag=( [sans]=false [mono]=false [cn]=false [handwriting]=false )
 declare dryRun=false
 declare forceCopy=false
+declare doRegister=true             # run cache-flush/re-register after copy (--no-register disables)
+declare registerOnly=false          # --register: registration-only mode, no copy
 declare -a paramList=()
+declare -a INSTALLED_FILES=()       # target paths actually (re)installed this run
 
 function isWSL()   { [[ -f /proc/version ]] && grep -qEi "(Microsoft|WSL)" /proc/version; }
 function isLinux() { ! isWSL && [[ "$(uname)" == "Linux" ]]; }
@@ -76,14 +77,27 @@ USAGE
   $(c Ys)\$ bash ${ME}$(c) $(c 0Wdi)[ $(c 0Gi)OPTIONS $(c 0Wdi)] $(c 0Mi)<FONT_NAME|DIR> $(c 0Wdi)...$(c)
 
 OPTIONS
-  $(c G)--sans$(c)               install all sans type fonts
-  $(c G)--mono$(c)               install all mono type fonts
-  $(c G)--cn$(c)                 install all cn type fonts
-  $(c G)--handwriting$(c)        install all handwriting type fonts
+  $(c G)--sans$(c)                 install all sans type fonts
+  $(c G)--mono$(c)                 install all mono type fonts
+  $(c G)--cn$(c)                   install all cn type fonts
+  $(c G)--handwriting$(c)          install all handwriting type fonts
 
-  $(c G)--dryrun$(c)             only print cp command, do not execute
-  $(c G)--force$(c), $(c G)-f$(c)          force overwrite
-  $(c G)--help$(c), $(c G)-h$(c)           show this help
+  $(c G)--register$(c) $(c 0Mi)<PATTERN>$(c)   registration-only: (re)register existing fonts by ls-glob, no copy
+  $(c G)--no-register$(c)          skip the CoreText re-register / cache-flush step
+
+  $(c G)--dryrun$(c)               only print cp command, do not execute
+  $(c G)--force$(c), $(c G)-f$(c)            force overwrite $(c 0Wdi)and install NEW fonts (bypass the already-installed filter)$(c)
+  $(c G)--help$(c), $(c G)-h$(c)             show this help
+
+NOTE
+  by default only refresh fonts already present in $(c 0Wi)${targetDir}$(c);
+  fonts not yet installed there are skipped ($(c 0Gi)--force$(c) installs them anyway).
+  after copying, macOS runs $(c 0Wi)register.py$(c) to flush the CoreText cache
+  and re-register (.user scope); Linux falls back to $(c 0Wi)fc-cache$(c).
+
+REGISTER EXAMPLE
+  $(c 0Ys)\$ bash ${ME} $(c 0Gi)--register $(c 0Mi)'~/Library/Fonts/TitilliumNerdFont-UprightSemibold*.otf'$(c)
+  $(c 0Ys)\$ bash ${ME} $(c 0Gi)--register $(c 0Mi)~/Library/Fonts/TitilliumNerdFont-UprightSemibold*$(c)
 
 EXAMPLE
   $(c 0Ys)\$ bash ${ME} $(c 0Gi)--dryrun $(c 0Mi)Operator$(c)
@@ -123,9 +137,11 @@ while [[ $# -gt 0 ]]; do
     --sans | --mono | --cn | --handwriting )
       type="${1#--}"; typeFlag["${type}"]=true;
       shift ;;
-    --dryrun     ) dryRun=true         ; shift ;;
-    --force | -f ) forceCopy=true      ; shift ;;
-    --help | -h  ) showHelp                    ;;
+    --dryrun      ) dryRun=true        ; shift ;;
+    --force | -f  ) forceCopy=true     ; shift ;;
+    --register    ) registerOnly=true  ; shift ;;
+    --no-register ) doRegister=false   ; shift ;;
+    --help | -h   ) showHelp                   ;;
     --*          ) die "unknown option: $1"    ;;
     *            ) paramList+=( "$1" ) ; shift ;;
   esac
@@ -169,6 +185,21 @@ function parseFontGroup() {
   echo "${srcPattern}|${tag}|${srcDesc}"
 }
 
+function isFontFile() {
+  local ext="${1##*.}"
+  case "${ext,,}" in otf | ttf | ttc | otc ) return 0 ;; * ) return 1 ;; esac
+}
+
+# widen a metadata glob so refresh matches whatever format is installed:
+#   .../otf/*NerdFont*.otf -> .../*/*NerdFont*   (any format subdir, any ext)
+function broadenPattern() {
+  local p="$1"
+  p="${p%.otf}"; p="${p%.ttf}"          # drop trailing format ext
+  p="${p//\/otf\//\/*\/}"               # /otf/ segment -> /*/
+  p="${p//\/ttf\//\/*\/}"               # /ttf/ segment -> /*/
+  printf '%s' "${p}"
+}
+
 function copyFonts() {
   local srcPattern="$1"
   local tgtDir="$2"
@@ -185,23 +216,90 @@ function copyFonts() {
   # shellcheck disable=SC2206
   declare -a fontInfo=( ${srcDesc//\//} )
 
-  if compgen -G "${srcPattern}" > /dev/null; then
-    # shellcheck disable=SC2086
-    set -- ${srcPattern}
-    srcs+=( "$@" )
-    srcsStr="$(printf '  %s\n' "${srcs[@]}" | sed '$!s/$/ \\/')"      # for dryrun mode print only
-    "${dryRun}" && echo -e "$(c 0Wdi)# ${srcDesc}$(c)\n$(c Mi)[${fontInfo[0]}::${tag}]$(c) $(c 0Gi)\$ ${cpCmd[*]}$(c 0Gi) \\ \n${srcsStr}$(c)"
-    cpCmd+=( "${srcs[@]}" )
-    if ! "${dryRun}"; then
-      echo -e "$(c Mi)>> ${fontInfo[0]} ${tag,,}$(c)"
-      "${cpCmd[@]}" 2>/dev/null || true;
-    fi
+  # candidate glob: --force uses the metadata format (exact); refresh mode is
+  # format-agnostic so an installed .ttf face is refreshed from repo .ttf and is
+  # never overwritten by the repo .otf (and vice versa).
+  local pattern="${srcPattern}"
+  "${forceCopy}" || pattern="$( broadenPattern "${srcPattern}" )"
+
+  if ! compgen -G "${pattern}" > /dev/null; then
+    skip "no files matched: ${pattern}    $(c 0Wdi)# from ${srcDesc}$(c)"
+    return 0
+  fi
+
+  # shellcheck disable=SC2086
+  set -- ${pattern}
+  local -a matched=( "$@" )
+  local -a srcs=() skipped=()
+  local f base stem
+  if "${forceCopy}"; then
+    srcs=( "${matched[@]}" )
   else
-    skip "no files matched: ${srcPattern}    $(c 0Wdi)# from ${srcDesc}$(c)"
+    # refresh only the same format already present under tgtDir; a stem (face
+    # name w/o ext) counts as "not installed" only when NO format of it exists.
+    local -A stemSeen=() stemHit=()
+    for f in "${matched[@]}"; do
+      base="${f##*/}"
+      isFontFile "${base}" || continue
+      stem="${base%.*}"
+      stemSeen["${stem}"]=1
+      test -e "${tgtDir}/${base}" && { srcs+=( "${f}" ); stemHit["${stem}"]=1; }
+    done
+    for stem in "${!stemSeen[@]}"; do
+      [[ -z "${stemHit[${stem}]:-}" ]] && skipped+=( "${stem}" )
+    done
+  fi
+
+  [[ "${#skipped[@]}" -gt 0 ]] &&
+    skip "not installed under ${tgtDir}, skip ${#skipped[@]}: ${skipped[*]}    $(c 0Wdi)# from ${srcDesc}$(c)"
+  [[ "${#srcs[@]}" -eq 0 ]] && return 0
+
+  local srcsStr
+  srcsStr="$(printf '  %s\n' "${srcs[@]}" | sed '$!s/$/ \\/')"      # for dryrun mode print only
+  "${dryRun}" && echo -e "$(c 0Wdi)# ${srcDesc}$(c)\n$(c Mi)[${fontInfo[0]}::${tag}]$(c) $(c 0Gi)\$ ${cpCmd[*]}$(c 0Gi) \\ \n${srcsStr}$(c)"
+  cpCmd+=( "${srcs[@]}" )
+  if ! "${dryRun}"; then
+    echo -e "$(c Mi)>> ${fontInfo[0]} ${tag,,}$(c)"
+    "${cpCmd[@]}" 2>/dev/null || true;
+    for f in "${srcs[@]}"; do INSTALLED_FILES+=( "${tgtDir}/${f##*/}" ); done
   fi
 }
 
-# --- main ---
+# (re)register given inputs (font files, dirs, or ls-globs) via register.py on macOS,
+# fall back to fc-cache on linux. defaults to the whole target dir when no input is given.
+function registerFonts() {
+  local -a inputs=( "$@" )
+  [[ "${#inputs[@]}" -eq 0 ]] && inputs=( "${targetDir}" )
+
+  if isOSX; then
+    test -f "${REGISTER}" || { skip "register script not found: ${REGISTER}"; return 0; }
+    local -a regCmd=( python3 "${REGISTER}" )
+    "${dryRun}" && regCmd+=( --dry-run )
+    local i
+    for i in "${inputs[@]}"; do regCmd+=( --input "${i}" ); done
+    echo -e "$(c Mi)>> register (.user): ${inputs[*]}$(c)"
+    "${regCmd[@]}"
+  elif isLinux; then
+    "${dryRun}" && { echo -e "$(c Mi)>> [dry-run] fc-cache -f ${targetDir}$(c)"; return 0; }
+    command type -P fc-cache >/dev/null && fc-cache -f "${targetDir}" || true
+  fi
+}
+
+# post-copy refresh: register only the files (re)installed this run
+function refreshFonts() {
+  "${doRegister}" || { skip "--no-register: skip cache refresh"; return 0; }
+  "${dryRun}"     && { skip "dry-run: skip cache refresh (register.py)"; return 0; }
+  [[ "${#INSTALLED_FILES[@]}" -eq 0 ]] && { skip "nothing (re)installed; skip cache refresh"; return 0; }
+  registerFonts "${INSTALLED_FILES[@]}"
+}
+
+# --- registration-only mode: (re)register existing fonts by ls-glob, no copy ---
+if "${registerOnly}"; then
+  registerFonts "${paramList[@]}"
+  exit 0
+fi
+
+# --- install mode ---
 declare -A fontsToInstall=()
 for t in "${!typeFlag[@]}"; do
   if [[ "${typeFlag[$t]}" == true ]]; then
@@ -221,19 +319,20 @@ if [[ "${#fontsToInstall[@]}" -gt 0 ]]; then
       result="$(parseFontGroup "${font}" "${group}")"
       IFS='|' read -r srcPattern tag srcDesc <<< "${result}"
       [[ -z "${srcPattern}"  ]] && continue
-      copyFonts "${srcPattern}" "${targetDir}" "${tag}" "${srcDesc}" &&
-      { command type -P fc-cache >/dev/null && fc-cache -f -v || true; }
+      copyFonts "${srcPattern}" "${targetDir}" "${tag}" "${srcDesc}"
     done
   done
 else
   for arg in "${paramList[@]}"; do
     if [[ -d "${arg}" ]]; then
-      copyFonts "${arg}/*NerdFont*" "${targetDir}" "DIRECTORY" "${arg}" &&
-      { command type -P fc-cache >/dev/null && fc-cache -f -v || true; }
+      copyFonts "${arg}/*NerdFont*" "${targetDir}" "DIRECTORY" "${arg}"
     else
       skip "no font matched: ${arg}"
     fi
   done
 fi
+
+# flush CoreText cache + re-register the fonts (re)installed this run
+refreshFonts
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh:

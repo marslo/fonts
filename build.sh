@@ -2,9 +2,9 @@
 # shellcheck source=/dev/null disable=SC2155,SC1079,SC1078
 #=============================================================================
 #     FileName : build.sh
-#       Author : marslo.jiao@gmail.com
+#       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-04-24 19:06:21
+#   LastChange : 2026-08-11 22:21:18
 #=============================================================================
 
 set -euo pipefail
@@ -14,20 +14,20 @@ set -euo pipefail
 c() { [ $# == 0 ] && printf "\033[0m" || printf "$1" | sed 's/\(.\)/\1;/g;s/\([SDIUFNHT]\)/2\1/g;s/\([KRGYBMCW]\)/3\1/g;s/\([krgybmcw]\)/4\1/g;y/SDIUFNHTsdiufnhtKRGYBMCWkrgybmcw/12345789123457890123456701234567/;s/^\(.*\);$/\\033[\1m/g'; }
 
 declare -r FONT_PATCHER='/opt/FontPatcher/font-patcher'
-declare -ra OPTIONS=( --complete --careful --quiet )
+declare -ra OPTIONS=( --complete --careful --quiet --no-progressbars )
 declare -ra MONO_OPTIONS=( --mono "${OPTIONS[@]}" )
 declare -a cmd=()
 declare -r ME="bash $(basename "${BASH_SOURCE[0]:-$0}")"
 
 # for parameters
-declare sans=false
-declare mono=false
-declare operatorm=false
-declare operatorp=false
-declare monaco=false
-declare recursived=false
-declare recursivem=false
-declare all=false
+declare SANS=false
+declare MONO=false
+declare OPERATOR_M=false
+declare OPERATOR_P=false
+declare MONACO=false
+declare RECURSIVE_D=false
+declare RECURSIVE_M=false
+declare ALL=false
 declare dryrun=false
 declare path=''
 
@@ -100,7 +100,7 @@ function patchRecursiveDesktop() {
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
-  done < <(fd -u -tf -e ttf -e otf --full-path Recursive/RecursiveDesktop/)
+  done < <( fd -u -tf -e ttf -e otf --full-path Recursive/RecursiveDesktop/ )
 }
 
 function patchRecursiveMono() {
@@ -123,7 +123,7 @@ function patchRecursiveMono() {
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
-  done < <(fd -u -tf -e ttf -e otf --full-path Recursive/RecursiveDesktop/)
+  done < <( fd -u -tf -e ttf -e otf --full-path Recursive/RecursiveDesktop/ )
 }
 
 function patchMonaco() {
@@ -143,7 +143,7 @@ function patchMonaco() {
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
-  done < <(fd -u -tf -e ttf -e otf --full-path ./Monaco)
+  done < <( fd -u -tf -e ttf -e otf --full-path ./Monaco )
 }
 
 function patchOperatorMono() {
@@ -165,7 +165,7 @@ function patchOperatorMono() {
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
-  done < <(fd . Operator/OperatorMono Operator/OperatorMonoLig Operator/OperatorMonoSSmLig -tf -e ttf -e otf)
+  done < <( fd . Operator/OperatorMono Operator/OperatorMonoLig Operator/OperatorMonoSSmLig -tf -e ttf -e otf )
 }
 
 function patchOperatorPro() {
@@ -187,12 +187,12 @@ function patchOperatorPro() {
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
-  done < <(fd . Operator/OperatorPro -tf -e ttf -e otf)
+  done < <( fd . Operator/OperatorPro -tf -e ttf -e otf )
 }
 
 function patchSans() {
-  local path="$1"
-  local -n opt="${2:-}"
+  local path="$1"; shift
+  local -a opt=( "$@" )      # remaining args = extra patch options (may be empty)
 
   if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
     message "${path}/*NerdFont*"
@@ -205,33 +205,32 @@ function patchSans() {
     outpath="$(dirname "${_f}")";
     message "$(basename "${_f}")" "${outpath}"
     cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -out "${outpath}" )
-    [[ -n "${#opt[@]}" ]] && cmd+=( "${opt[@]}" )
+    [[ "${#opt[@]}" -gt 0 ]] && cmd+=( "${opt[@]}" )
     # shellcheck disable=SC2015
     "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
-  done < <(fd -u -tf -e ttf -e otf --full-path "${path}")
+  done < <( fd -u -tf -e ttf -e otf --full-path "${path}" )
 }
 
 function patchMono() {
-  local path="$1"
-  local -n opt="${2:-}"
+  local path="$1"; shift
+  local -a opt=( "$@" )      # remaining args = extra patch options (may be empty)
 
   if ls "${path}"/*NerdFont* >/dev/null 2>&1; then
     message "${path}/*NerdFont*"
     # shellcheck disable=SC2015
-    "${dryrun}" &&
-      for i in "${path}"/*NerdFont*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
-      rm -rfv "${path}"/*NerdFont*
+    "${dryrun}" && for i in "${path}"/*NerdFont*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
+                   rm -rfv "${path}"/*NerdFont*
   fi
   while read -r _f; do
     outpath="$(dirname "${_f}")";
     for _e in otf ttf; do
       message "${_e}" "$(basename "${_f}")" "${outpath}"
       cmd=("${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
-      [[ -n "${#opt[@]}" ]] && cmd+=( "${opt[@]}" )
+      [[ "${#opt[@]}" -gt 0 ]] && cmd+=( "${opt[@]}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done;
-  done < <(fd -u -tf -e ttf -e otf --full-path "${path}")
+  done < <( fd -u -tf -e ttf -e otf --full-path "${path}" )
 }
 
 function showHelp() { echo -e "${USAGE}"; exit 0; }
@@ -243,56 +242,60 @@ declare -a PATCH_OPT=()
 # shellcheck disable=SC2124,SC2034
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --sans              ) sans=true                ; shift   ;;
-    --mono              ) mono=true                ; shift   ;;
-    --operator-mono     ) operatorm=true           ; shift   ;;
-    --operator-pro      ) operatorp=true           ; shift   ;;
-    --monaco            ) monaco=true              ; shift   ;;
-    --recursive-desktop ) recursived=true          ; shift   ;;
-    --recursive-mono    ) recursivem=true          ; shift   ;;
+    --sans              ) SANS=true                ; shift   ;;
+    --mono              ) MONO=true                ; shift   ;;
+    --operator-mono     ) OPERATOR_M=true           ; shift   ;;
+    --operator-pro      ) OPERATOR_P=true           ; shift   ;;
+    --monaco            ) MONACO=true              ; shift   ;;
+    --recursive-desktop ) RECURSIVE_D=true          ; shift   ;;
+    --recursive-mono    ) RECURSIVE_M=true          ; shift   ;;
     --dry-run           ) dryrun=true              ; shift   ;;
-    -a | --all          ) all=true                 ; shift   ;;
+    -a | --all          ) ALL=true                 ; shift   ;;
     -p | --path         ) path="$2"                ; shift 2 ;;
     --                  ) shift ; PATCH_OPT=("$@") ; break   ;;
     -h | --help | *     ) showHelp                           ;;
   esac
 done
 
-[[ -z "${path}" ]] && { "${sans:-false}" || "${mono:-false}"; } &&
+[[ -z "${path}" ]] && { "${SANS:-false}" || "${MONO:-false}"; } &&
   die "Please specify the path ( via \`-p/--path <path>\` )"
 # shellcheck disable=SC2001
 path="$(sed 's#/*$##' <<< "${path}")"
 
-# for `--all`
-if "${all}"; then
+# for --all
+if "${ALL}"; then
   # mono
-  operatorm=true
-  monaco=true
-  recursivem=true
+  OPERATOR_M=true
+  MONACO=true
+  RECURSIVE_M=true
   while read -r _path; do
     patchMono "./${_path}"
-  done < <(fmt -1 <<< 'ComicMono LXGW-WenKai/mono VictorMono audiolink/console audiolink/mono monaspace/radon')
+  done < <(command fmt -1 <<< 'ComicMono LXGW-WenKai/mono VictorMono audiolink/console audiolink/mono monaspace/radon')
 
   # sans
-  recursived=true
-  operatorp=true
+  RECURSIVE_D=true
+  OPERATOR_P=true
   while read -r _path; do
     patchSans "./${_path}"
-  done < <(fmt -1 <<< 'Candara Gisha Grandstander LXGW-WenKai/bright LXGW-WenKai/sans NotoSansSC Shayufeite Titillium Yozai')
+  done < <(command fmt -1 <<< 'Candara Gisha Grandstander LXGW-WenKai/bright LXGW-WenKai/sans NotoSansSC Shayufeite Titillium Yozai')
 
   # handwriting
   while read -r _path; do
     patchSans "./${_path}"
-  done < <(fmt -1 <<< 'Papyrus segoe-print')
+  done < <(command fmt -1 <<< 'Papyrus segoe-print')
 fi
 
-"${operatorm}"  && patchOperatorMono
-"${operatorp}"  && patchOperatorPro
-"${monaco}"     && patchMonaco
-"${recursived}" && patchRecursiveDesktop
-"${recursivem}" && patchRecursiveMono
+"${OPERATOR_M}"  && patchOperatorMono
+"${OPERATOR_P}"  && patchOperatorPro
+"${MONACO}"      && patchMonaco
+"${RECURSIVE_D}" && patchRecursiveDesktop
+"${RECURSIVE_M}" && patchRecursiveMono
 
-"${sans}"       && patchSans "${path}" PATCH_OPT
-"${mono}"       && patchMono "${path}" PATCH_OPT
+"${SANS}"        && patchSans "${path}" "${PATCH_OPT[@]}"
+"${MONO}"        && patchMono "${path}" "${PATCH_OPT[@]}"
+
+# guard flags above are `false && cmd` when their mode is off, so the last one
+# would leave $? = 1 on success; set -e already aborts on any real failure.
+exit 0
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh:
