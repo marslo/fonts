@@ -27,7 +27,7 @@ class FontnameParser:
     def _make_ps_name(self, n, is_family):
         """Helper to limit font name length in PS names"""
         fam = 'family ' if is_family else ''
-        limit = 31 if is_family else 63
+        limit = 63 if is_family else 127
         if len(n) <= limit:
             return n
         r = re.search('(.*)(-.*)', n)
@@ -328,7 +328,7 @@ class FontnameParser:
         ret = [ ]
         for i in range(maxnum):
             if len(names[i]):
-                ret += [( languages[i], entry, self.checklen(31, message, names[i]) )]
+                ret += [( languages[i], entry, self.checklen(63, message, names[i]) )]
             else:
                 break
         return ret
@@ -381,11 +381,11 @@ class FontnameParser:
                 if k == 'Version':
                     version_tag = ' ' + v.split()[-1]
 
-        sfnt_list += [( 'English (US)', 'Family', self.checklen(31, 'Family (ID 1)', self.family()) )] # 1
-        sfnt_list += [( 'English (US)', 'SubFamily', self.checklen(31, 'SubFamily (ID 2)', self.subfamily()) )] # 2
+        sfnt_list += [( 'English (US)', 'Family', self.checklen(63, 'Family (ID 1)', self.family()) )] # 1
+        sfnt_list += [( 'English (US)', 'SubFamily', self.checklen(63, 'SubFamily (ID 2)', self.subfamily()) )] # 2
         sfnt_list += [( 'English (US)', 'UniqueID', self.fullname() + version_tag )] # 3
-        sfnt_list += [( 'English (US)', 'Fullname', self.checklen(63, 'Fullname (ID 4)', self.fullname()) )] # 4
-        sfnt_list += [( 'English (US)', 'PostScriptName', self.checklen(63, 'PSN (ID 6)', self.psname()) )] # 6
+        sfnt_list += [( 'English (US)', 'Fullname', self.checklen(127, 'Fullname (ID 4)', self.fullname()) )] # 4
+        sfnt_list += [( 'English (US)', 'PostScriptName', self.checklen(127, 'PSN (ID 6)', self.psname()) )] # 6
         sfnt_plus  = self.pfam_to_sfnt(self.preferred_family, 'Preferred Family', 'PrefFamily (ID 16)') # 16
         sfnt_plus += self.pfam_to_sfnt(self.preferred_styles, 'Preferred Styles', 'PrefStyles (ID 17)', len(sfnt_plus)) # 17
         sfnt_list += sfnt_plus

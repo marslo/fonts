@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf8
-# Nerd Fonts Version: 3.5.0
+# Nerd Fonts Version: 3.5.0.1
 # Script version is further down
 
 from __future__ import absolute_import, print_function, unicode_literals
@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 # Change the script version when you edit this script:
 script_version = "4.27.0"
 
-version = "3.5.0"
+version = "3.5.0.1"
 projectName = "Nerd Fonts"
 projectNameAbbreviation = "NF"
 projectNameSingular = projectName[:-1]
@@ -2130,6 +2130,17 @@ def update_progress(prefix, current, maximum):
     sys.stdout.flush()
 
 
+def fontforge_git_hash():
+    """ Return the git commit hash FontForge was built from.
+
+    Parsed from fontforge.__version__ (e.g. '20251009 git:dc05099...'); returns the
+    lower-cased hash, or '' if it can not be determined. This is a pure-Python lookup
+    (no external `fontforge --version` call needed).
+    """
+    raw = getattr(fontforge, '__version__', '') or ''
+    match = re.search(r'git:([0-9a-fA-F]{7,40})', raw)
+    return match.group(1).lower() if match else ''
+
 def check_fontforge_min_version():
     """ Verifies installed FontForge version meets minimum requirement. """
     minimumVersion = 20141231
@@ -2148,8 +2159,22 @@ def check_fontforge_min_version():
         # These two commits are needed on top of 20251009 for us:
         # https://github.com/fontforge/fontforge/commit/9d119ca0bf415e3d69086f4931fcbb39d3d85c51 (their PR 5698)
         # https://github.com/fontforge/fontforge/commit/aedb8f2e95ddba99e8cb6446f082a356e2c2625b (their PR 5702)
-        logger.warning("Fontforge 20251009 produces unusable fonts in some cases")
-        logger.warning("Use an older or newer (after git hash aedb8f2e) version if you are affected")
+        # Some builds report version 20251009 yet already contain the two fixes above
+        # (upstream has not bumped the release id on master yet). Bypass the warning for
+        # such known-good builds, identified by their git hash.
+        known_good_hashes = (
+            'dc05099ff6b488d459c8a59259807007dd59d9a5',  # brew --HEAD build (2026-08-10), includes PR 5698 & 5702
+        )
+        build_hash = fontforge_git_hash()
+        is_known_good = build_hash != '' and any(
+            build_hash == h or build_hash.startswith(h) or h.startswith(build_hash)
+            for h in known_good_hashes
+        )
+        if is_known_good:
+            logger.debug("FontForge reports 20251009 but build '%s' is known-good; skipping warning", build_hash)
+        else:
+            logger.warning("Fontforge 20251009 produces unusable fonts in some cases")
+            logger.warning("Use an older or newer (after git hash aedb8f2e) version if you are affected")
 
 def check_version_with_git(version):
     """ Upgraded the version to the current git tag version (starting with 'v') """
@@ -2451,8 +2476,10 @@ def main():
     global version
     git_version = check_version_with_git(version)
     global allversions
-    allversions = "Patcher v{} ({}) (ff {})".format(
-        git_version if git_version else version, script_version, fontforge.version())
+    ff_hash = fontforge_git_hash()
+    ff_revision = ", rev {}".format(ff_hash[:7]) if ff_hash else ""
+    allversions = "Patcher v{} ({}) (ff {}{})".format(
+        git_version if git_version else version, script_version, fontforge.version(), ff_revision)
     print("{} {}".format(projectName, allversions))
     if git_version:
         version = git_version
