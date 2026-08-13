@@ -24,3 +24,10 @@ repos:
       - id: mixed-line-ending
         name: Mixed Line Ending
         args: ["--fix=lf"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.2
+    hooks:
+      - id: ruff-check
+        name: Ruff (lint)
+        args: ["--fix"]
