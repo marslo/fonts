@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-08-12 04:36:13
+#   LastChange : 2026-08-18 18:02:20
 #=============================================================================
 
 set -euo pipefail
@@ -21,6 +21,7 @@ declare -r ME="bash $(basename "${BASH_SOURCE[0]:-$0}")"
 # shellcheck disable=SC2155
 declare -r SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]:-$0}" )" && pwd )"
 declare -r TU_RUN="${SCRIPT_DIR}/Titillium/upright/scripts/run.sh"   # titillium upright pipeline
+declare -r DOTZERO="${SCRIPT_DIR}/dotzero.py"                        # dotted-zero patch ( 0 vs o )
 
 # for parameters
 declare SANS=false
@@ -31,6 +32,7 @@ declare MONACO=false
 declare RECURSIVE_D=false
 declare RECURSIVE_M=false
 declare TITILLIUM_UP=false
+declare LEKTON=false
 declare ALL=false
 declare ALL_SANS=false
 declare ALL_MONO=false
@@ -65,6 +67,7 @@ OPTIONS
   $(c G)--recursive-desktop$(c)     patch for recursive desktop font
   $(c G)--recursive-mono$(c)        patch for recursive mono font
   $(c G)--titillium-upright$(c)     build Titillium Upright NF: italic + NF + metadata fix. $(c 0Wdi)( src $(c 0Mi)Titillium$(c 0Wdi) -> target $(c 0Mi)Titillium/upright $(c 0Wdi))$(c)
+  $(c G)--lekton$(c)                build Lekton NF ( mono ) then add a centered dot to $(c 0Mi)0$(c) $(c 0Wdi)( 0 vs o, via dotzero.py )$(c)
 
   $(c G)--dry-run$(c)               show what would be done, but do not execute
   $(c G)-h$(c), $(c G)--help$(c)              show this help message
@@ -307,15 +310,40 @@ function patchTitilliumUpright() {
   "${dryrun}" || rm -rf "${work}"
 }
 
+# build Lekton Nerd Font Mono ( via patchMono ), then add a centered dot to '0' in place
+# so 0 is distinguishable from o. delegates the dot to dotzero.py ( needs fontforge ).
+#   source: Lekton/Lekton-*.ttf -> Lekton/LektonNerdFontMono-*.{otf,ttf} ( 0 dotted )
+# forwards "$@" ( --ext / -- PATCHER_OPT ) to patchMono; honors --dry-run.
+function patchLekton() {
+  local path='./Lekton'
+  patchMono "${path}" "$@"          # build NF first ( fresh 0, then dotted below )
+
+  test -f "${DOTZERO}" || die "dotzero not found: ${DOTZERO}"
+  command -v fontforge >/dev/null 2>&1 || die "fontforge required for dotzero ( brew install fontforge )"
+
+  # dot every freshly-built NerdFont face in place; skip the vendor source ttf
+  local -a nf=()
+  shopt -s nullglob
+  nf=( "${path}"/*NerdFont*.otf "${path}"/*NerdFont*.ttf )
+  shopt -u nullglob
+  test "${#nf[@]}" -eq 0 && return 0
+
+  message "dotzero '0'" "$(basename "${path}")" "${path}"
+  local -a dotCmd=( fontforge -script "${DOTZERO}" -o "${path}" "${nf[@]}" )
+  # shellcheck disable=SC2015
+  "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${dotCmd[@]}")" || "${dotCmd[@]}" 2>/dev/null
+}
+
 function patchAllMono() {
   patchOperatorMono
   patchMonaco
   patchRecursiveMono
+  patchLekton                 # lekton: build NF + dot the '0'
 
   # common mono
   while read -r _path; do
     patchMono "./${_path}"
-  done < <(command fmt -1 <<< 'ComicMono menlo monofur Lekton MonoLisa agave iAWriterMonoS spleen LXGW-WenKai/mono VictorMono audiolink/console audiolink/mono monaspace/radon iosevka/marslo iosevka/ss15')
+  done < <(command fmt -1 <<< 'ComicMono menlo monofur MonoLisa agave iAWriterMonoS spleen LXGW-WenKai/mono VictorMono audiolink/console audiolink/mono monaspace/radon iosevka/marslo iosevka/ss15')
 }
 
 function patchAllSans() {
@@ -358,6 +386,7 @@ while [[ $# -gt 0 ]]; do
     --recursive-desktop     ) RECURSIVE_D=true         ; shift   ;;
     --recursive-mono        ) RECURSIVE_M=true         ; shift   ;;
     --titillium-upright     ) TITILLIUM_UP=true        ; shift   ;;
+    --lekton                ) LEKTON=true              ; shift   ;;
     --dry-run               ) dryrun=true              ; shift   ;;
     -a | --all              ) ALL=true                 ; shift   ;;
     --all-sans              ) ALL_SANS=true            ; shift   ;;
@@ -388,6 +417,7 @@ path="$(sed 's#/*$##' <<< "${path}")"
 "${RECURSIVE_D}"     && patchRecursiveDesktop
 "${RECURSIVE_M}"     && patchRecursiveMono
 "${TITILLIUM_UP}"    && patchTitilliumUpright
+"${LEKTON}"          && patchLekton "${PATCHER_OPT[@]}"
 
 "${SANS}"            && patchSans "${path}" "${PATCHER_OPT[@]}"
 "${MONO}"            && patchMono "${path}" "${PATCHER_OPT[@]}"
