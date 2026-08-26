@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-08-18 18:02:20
+#   LastChange : 2026-08-25 18:35:15
 #=============================================================================
 
 set -euo pipefail
@@ -59,7 +59,7 @@ OPTIONS
   $(c G)--sans$(c)                  patch individual sans font recursively, requires $(c Mi)--path$(c)
   $(c G)--mono$(c)                  patch individual mono font recursively, requires $(c Mi)--path$(c)
   $(c G)-p$(c), $(c G)--path $(c 0Mi)<path>$(c)       the input path to patch fonts
-  $(c G)--ext$(c), $(c G)--extension $(c 0Mi)<e>$(c)  format(s) to build & clean $(c 0Wdi)( comma or repeated; default sans=ttf, mono=otf+ttf )$(c)
+  $(c G)--ext$(c), $(c G)--extension $(c 0Mi)<e>$(c)  format(s) to build & clean $(c 0Wdi)( comma or repeated; default sans=follow source, mono=otf+ttf )$(c)
 
   $(c G)--operator-mono$(c)         patch for operator mono font
   $(c G)--operator-pro$(c)          patch for operator pro font
@@ -253,18 +253,34 @@ function cleanOldNF() {
 function patchSans() {
   local path="$1"; shift
   resolveExts "$@"           # -> REQ_EXTS ( union + uniq ) + BASEOPT ( passthrough w/o -ext )
-  test "${#REQ_EXTS[@]}" -eq 0 && REQ_EXTS=( ttf )   # sans default: ttf
+  local dynamic=false
+  test "${#REQ_EXTS[@]}" -eq 0 && dynamic=true   # sans default: follow each source's own format ( ttf->ttf, otf->otf )
+
+  # collect sources once ( needed twice: cleanup union + per-file build )
+  local -a srcs=()
+  while read -r _f; do srcs+=( "${_f}" ); done \
+    < <( fd -u -tf -e ttf -e otf -E '*NerdFont*' -E '*[Uu]pright*' -E out --full-path "${path}" )
+
+  # dynamic: clean the union of the sources' own extensions; explicit --ext: clean REQ_EXTS
+  if "${dynamic}"; then
+    local _u; local -A useen=(); REQ_EXTS=()
+    for _f in "${srcs[@]}"; do _u="${_f##*.}"; _u="${_u,,}"; test -n "${useen[${_u}]:-}" || { REQ_EXTS+=( "${_u}" ); useen[${_u}]=1; }; done
+  fi
   cleanOldNF "${path}"
-  while read -r _f; do
+
+  local -a exts=()
+  for _f in "${srcs[@]}"; do
     outpath="$(dirname "${_f}")";
-    for _e in "${REQ_EXTS[@]}"; do          # one font-patcher run per requested ext
+    # dynamic -> this source's own ext only ( lowercased ); explicit --ext -> every requested ext
+    if "${dynamic}"; then _e="${_f##*.}"; exts=( "${_e,,}" ); else exts=( "${REQ_EXTS[@]}" ); fi
+    for _e in "${exts[@]}"; do               # one font-patcher run per ext
       message "${_e}" "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       [[ "${#BASEOPT[@]}" -gt 0 ]] && cmd+=( "${BASEOPT[@]}" )
       # shellcheck disable=SC2015
       "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
-  done < <( fd -u -tf -e ttf -e otf -E '*NerdFont*' -E '*[Uu]pright*' -E out --full-path "${path}" )
+  done
 }
 
 function patchMono() {
@@ -354,7 +370,7 @@ function patchAllSans() {
   # common sans
   while read -r _path; do
     patchSans "./${_path}"
-  done < <(command fmt -1 <<< 'Candara Gisha Grandstander iAWriterQuattroS Orbitron msyh LXGW-WenKai/bright LXGW-WenKai/sans NotoSansSC Titillium Yozai')
+  done < <(command fmt -1 <<< 'Candara Gisha Grandstander iAWriterQuattroS Orbitron msyh AtkinsonHyperlegibleNext LXGW-WenKai/bright LXGW-WenKai/sans NotoSansSC Titillium Yozai')
 }
 
 function patchAllHandwriting() {
