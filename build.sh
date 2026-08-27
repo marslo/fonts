@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-08-25 18:35:15
+#   LastChange : 2026-08-26 23:39:26
 #=============================================================================
 
 set -euo pipefail
@@ -359,7 +359,7 @@ function patchAllMono() {
   # common mono
   while read -r _path; do
     patchMono "./${_path}"
-  done < <(command fmt -1 <<< 'ComicMono menlo monofur MonoLisa agave iAWriterMonoS spleen LXGW-WenKai/mono VictorMono audiolink/console audiolink/mono monaspace/radon iosevka/marslo iosevka/ss15')
+  done < <(command fmt -1 <<< 'ComicMono menlo monofur MonoLisa agave iAWriterMonoS spleen FantasqueSansMono LXGW-WenKai/mono VictorMono audiolink/console audiolink/mono monaspace/radon iosevka/marslo iosevka/ss15')
 }
 
 function patchAllSans() {
