@@ -2,10 +2,15 @@
 # -*- coding: utf-8 -*-
 
 """
-Add a centered dot to the 'zero' glyph so 0 is distinguishable from o.
+Add a centered dot to the 'zero' glyph so 0 is distinguishable from o, and optionally enlarge the tiny 'bullet' (•, U+2022) glyph.
 
 Run with fontforge's python:  fontforge -script dotzero.py [opts] <in.otf|dir>...
 Keeps advance width (monospace-safe); originals are never modified.
+
+USAGE
+    fontforge -script dotzero.py -o Lekton Lekton/*NerdFont*.otf
+    fontforge -script dotzero.py --bullet -o Lekton Lekton/*NerdFont*.otf Lekton/*NerdFont*.ttf      # == --bullet 100
+    fontforge -script dotzero.py --bullet 120 -n Lekton/*NerdFont*.otf
 """
 
 import argparse
@@ -29,28 +34,46 @@ def isBoldFace( font ):
     return heavy or ( font.os2_weight or 0 ) >= 600
 
 
-def addDot( glyph, radius ):
-    """ Add a filled circle of the given radius at the glyph bbox center. """
-    x0, y0, x1, y1 = glyph.boundingBox()
-    cx = ( x0 + x1 ) / 2.0
-    cy = ( y0 + y1 ) / 2.0
-    r = radius
+def circleContour( cx, cy, r, quadratic ):
+    """ Build a closed circle contour of radius r centered at (cx, cy). """
     k = KAPPA * r
     c = fontforge.contour()
     c.is_quadratic = False
-    # four on-curve extrema (E, N, W, S) joined by cubic arcs
+    # four on-curve extreme (E, N, W, S) joined by cubic arcs
     c.moveTo( cx + r, cy )
     c.cubicTo( ( cx + r, cy + k ), ( cx + k, cy + r ), ( cx, cy + r ) )
     c.cubicTo( ( cx - k, cy + r ), ( cx - r, cy + k ), ( cx - r, cy ) )
     c.cubicTo( ( cx - r, cy - k ), ( cx - k, cy - r ), ( cx, cy - r ) )
     c.cubicTo( ( cx + k, cy - r ), ( cx + r, cy - k ), ( cx + r, cy ) )
     c.closed = True
-    # ttf glyphs are quadratic; adding a cubic contour to a quadratic layer is
-    # silently dropped, so convert the circle to match the layer's spline order
-    layer = glyph.layers[ 'Fore' ]
-    if layer.is_quadratic:
+    # ttf glyphs are quadratic; a cubic contour added to a quadratic layer is silently dropped, so match the circle to the layer's spline order
+    if quadratic:
         c.is_quadratic = True
-    glyph.layers[ 'Fore' ] += c
+    return c
+
+
+def addDot( glyph, radius ):
+    """ Add a filled circle of the given radius at the glyph bbox center. """
+    x0, y0, x1, y1 = glyph.boundingBox()
+    cx = ( x0 + x1 ) / 2.0
+    cy = ( y0 + y1 ) / 2.0
+    layer = glyph.layers[ 'Fore' ]
+    glyph.layers[ 'Fore' ] += circleContour( cx, cy, radius, layer.is_quadratic )
+    glyph.correctDirection()
+
+
+def setCircle( glyph, radius ):
+    """ Replace the glyph outline with one circle of the given radius, keeping center and advance width. """
+    x0, y0, x1, y1 = glyph.boundingBox()
+    cx = ( x0 + x1 ) / 2.0
+    cy = ( y0 + y1 ) / 2.0
+    width = glyph.width
+    quadratic = glyph.layers[ 'Fore' ].is_quadratic
+    layer = fontforge.layer()
+    layer.is_quadratic = quadratic
+    layer += circleContour( cx, cy, radius, quadratic )
+    glyph.layers[ 'Fore' ] = layer          # replace outline; width restored below
+    glyph.width = width
     glyph.correctDirection()
 
 
@@ -77,35 +100,49 @@ def collectInputs( paths ):
 
 
 def process( path, args ):
-    """ Open one font, dot its glyph, and generate into the output dir. """
+    """ Open one font, dot the zero and/or enlarge the bullet, then generate into the output dir. """
     font = fontforge.open( path )
     try:
-        if args.glyph not in font:
-            print( f"skip (no '{args.glyph}'): {path}", file=sys.stderr )
-            return False
-
         scale = ( font.em or 1000 ) / 1000.0
-        base = args.bold_radius if isBoldFace( font ) else args.radius
-        r = base * scale
+        name = os.path.basename( path )
+        notes = []
 
-        glyph = font[ args.glyph ]
-        before = len( list( glyph.layers[ 'Fore' ] ) )
-        if before > 2:
-            print( f"warn: '{args.glyph}' already has {before} contours in {os.path.basename( path )} — adding anyway", file=sys.stderr )
+        # dot the zero ( primary action )
+        if args.glyph in font:
+            base = args.bold_radius if isBoldFace( font ) else args.radius
+            r = base * scale
+            glyph = font[ args.glyph ]
+            before = len( list( glyph.layers[ 'Fore' ] ) )
+            if before > 2:
+                print( f"warn: '{args.glyph}' already has {before} contours in {name} — adding anyway", file=sys.stderr )
+            addDot( glyph, r )
+            after = len( list( glyph.layers[ 'Fore' ] ) )
+            if after != before + 1:
+                sys.exit( f"error: dot was not added to '{args.glyph}' in {name} ( {before} -> {after} contours )" )
+            notes.append( f"{args.glyph} r={r:.0f}" )
+        else:
+            print( f"skip (no '{args.glyph}'): {path}", file=sys.stderr )
 
-        addDot( glyph, r )
-        after = len( list( glyph.layers[ 'Fore' ] ) )
-        if after != before + 1:
-            sys.exit( f"error: dot was not added to '{args.glyph}' in {os.path.basename( path )} ( {before} -> {after} contours )" )
+        # enlarge the bullet ( optional )
+        if args.bullet_radius is not None:
+            if 'bullet' in font:
+                setCircle( font[ 'bullet' ], args.bullet_radius * scale )
+                notes.append( f"bullet r={args.bullet_radius * scale:.0f}" )
+            else:
+                print( f"skip (no 'bullet'): {path}", file=sys.stderr )
+
+        if not notes:
+            return False
         if args.rename:
             rename( font, args.rename )
 
-        out = os.path.join( args.out_dir, os.path.basename( path ) )
+        out = os.path.join( args.out_dir, name )
+        tag = ', '.join( notes )
         if args.dry_run:
-            print( f"[dry-run] {os.path.basename( path ):40s} r={r:.0f} -> {out}" )
+            print( f"[dry-run] {name:40s} {tag} -> {out}" )
         else:
             font.generate( out )
-            print( f"{os.path.basename( path ):40s} r={r:.0f} -> {out}" )
+            print( f"{name:40s} {tag} -> {out}" )
         return True
     finally:
         font.close()
@@ -121,6 +158,7 @@ def parseArgs( argv ):
     p.add_argument( '-r', '--radius', type=float, default=62.0, help='dot radius at em=1000 (default 62)' )
     p.add_argument( '--bold-radius', type=float, help='radius for bold faces (default: radius + 10)' )
     p.add_argument( '-g', '--glyph', default='zero', help="glyph to modify (default 'zero')" )
+    p.add_argument( '--bullet', dest='bullet_radius', nargs='?', const=100.0, type=float, default=None, metavar='RADIUS', help="also enlarge the 'bullet' (•, U+2022) to a circle of RADIUS at em=1000 (default 100 ~= 20%% of em)" )
     p.add_argument( '--rename', metavar='SUFFIX', help="append SUFFIX to family name for coexistence, e.g. ' Dotted'" )
     p.add_argument( '-n', '--dry-run', action='store_true', help='report actions without writing files' )
     args = p.parse_args( argv )

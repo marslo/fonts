@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-08-26 23:39:26
+#   LastChange : 2026-09-03 18:40:52
 #=============================================================================
 
 set -euo pipefail
@@ -37,7 +37,7 @@ declare ALL=false
 declare ALL_SANS=false
 declare ALL_MONO=false
 declare ALL_HANDWRITING=false
-declare dryrun=false
+declare DRYRUN=false
 declare path=''
 declare -a EXTS=()      # build.sh's own --ext/--extension: which formats to (re)build & clean
 declare -a _extv=()     # scratch for comma-splitting --ext values
@@ -67,7 +67,7 @@ OPTIONS
   $(c G)--recursive-desktop$(c)     patch for recursive desktop font
   $(c G)--recursive-mono$(c)        patch for recursive mono font
   $(c G)--titillium-upright$(c)     build Titillium Upright NF: italic + NF + metadata fix. $(c 0Wdi)( src $(c 0Mi)Titillium$(c 0Wdi) -> target $(c 0Mi)Titillium/upright $(c 0Wdi))$(c)
-  $(c G)--lekton$(c)                build Lekton NF ( mono ) then add a centered dot to $(c 0Mi)0$(c) $(c 0Wdi)( 0 vs o, via dotzero.py )$(c)
+  $(c G)--lekton$(c)                build Lekton NF ( mono ) then dot $(c 0Mi)0$(c) and enlarge $(c 0Mi)•$(c) $(c 0Wdi)( 0 vs o + bigger bullet, via dotzero.py )$(c)
 
   $(c G)--dry-run$(c)               show what would be done, but do not execute
   $(c G)-h$(c), $(c G)--help$(c)              show this help message
@@ -107,9 +107,7 @@ function patchRecursiveDesktop() {
   if ls Recursive/RecursiveDesktopNF/*/* >/dev/null 2>&1; then
     message "Recursive/RecursiveDesktopNF/*/*"
     # shellcheck disable=SC2015
-    "${dryrun}" &&
-      for i in Recursive/RecursiveDesktopNF/*/*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
-      rm -rfv Recursive/RecursiveDesktopNF/*/*
+    "${DRYRUN}" && for i in Recursive/RecursiveDesktopNF/*/*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done || rm -rfv Recursive/RecursiveDesktopNF/*/*
   fi
   while read -r _f; do
     outpath="$(dirname "${_f}")NF";
@@ -121,7 +119,7 @@ function patchRecursiveDesktop() {
       message "${_e}" "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" --name "${name}" )
       # shellcheck disable=SC2015
-      "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
   done < <( fd -u -tf -e ttf -e otf --full-path Recursive/RecursiveDesktop/ )
 }
@@ -130,9 +128,7 @@ function patchRecursiveMono() {
   if ls Recursive/RecursiveCodeNF/*/* >/dev/null 2>&1; then
     message "Recursive/RecursiveCodeNF/*/*"
     # shellcheck disable=SC2015
-    "${dryrun}" &&
-      for i in Recursive/RecursiveCodeNF/*/*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
-      rm -rfv Recursive/RecursiveCodeNF/*/*
+    "${DRYRUN}" && for i in Recursive/RecursiveCodeNF/*/*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done || rm -rfv Recursive/RecursiveCodeNF/*/*
   fi
   while read -r _f; do
     input="$(dirname "${_f}")";
@@ -143,7 +139,7 @@ function patchRecursiveMono() {
       message "${_e}" "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
   done < <( fd -u -tf -e ttf -e otf -E '*NerdFont*' --full-path Recursive/RecursiveCode/ )
 }
@@ -152,9 +148,7 @@ function patchMonaco() {
   if ls Monaco/*NF/*/* >/dev/null 2>&1; then
     message "Monaco/*NF/*/*"
     # shellcheck disable=SC2015
-    "${dryrun}" &&
-      for i in Monaco/*NF/*/*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
-      rm -rfv Monaco/*NF/*/*
+    "${DRYRUN}" && for i in Monaco/*NF/*/*; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done || rm -rfv Monaco/*NF/*/*
   fi
   while read -r _f; do
     for _e in otf ttf; do
@@ -163,7 +157,7 @@ function patchMonaco() {
       message "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
   done < <( fd -u -tf -e ttf -e otf --full-path ./Monaco )
 }
@@ -172,9 +166,7 @@ function patchOperatorMono() {
   if ls Operator/*Mono*NF >/dev/null 2>&1; then
     message "Operator/*Mono*NF"
     # shellcheck disable=SC2015
-    "${dryrun}" &&
-      for i in Operator/*Mono*NF; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
-      rm -rfv Operator/*Mono*NF
+    "${DRYRUN}" && for i in Operator/*Mono*NF; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done || rm -rfv Operator/*Mono*NF
   fi
   while read -r _f; do
     for _e in otf ttf; do
@@ -185,7 +177,7 @@ function patchOperatorMono() {
       message "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
   done < <( fd . Operator/OperatorMono Operator/OperatorMonoLig Operator/OperatorMonoSSmLig -tf -e ttf -e otf )
 }
@@ -194,9 +186,7 @@ function patchOperatorPro() {
   if ls Operator/Pro*NF* >/dev/null 2>&1; then
     message "Operator/*Pro*NF"
     # shellcheck disable=SC2015
-    "${dryrun}" &&
-      for i in Operator/*Pro*NF; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
-      rm -rfv Operator/*Pro*NF
+    "${DRYRUN}" && for i in Operator/*Pro*NF; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done || rm -rfv Operator/*Pro*NF
   fi
   while read -r _f; do
     for _e in otf ttf; do
@@ -207,7 +197,7 @@ function patchOperatorPro() {
       message "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
   done < <( fd . Operator/OperatorPro -tf -e ttf -e otf )
 }
@@ -245,9 +235,7 @@ function cleanOldNF() {
   label="$( IFS=,; echo "${REQ_EXTS[*]}" )"
   message "${path}/*NerdFont*.{${label}}"
   # shellcheck disable=SC2015
-  "${dryrun}" &&
-    for i in "${nfOld[@]}"; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done ||
-    rm -rfv "${nfOld[@]}"
+  "${DRYRUN}" && for i in "${nfOld[@]}"; do echo -e "$(c Wi)  >> rm -rvf ${i}$(c)"; done || rm -rfv "${nfOld[@]}"
 }
 
 function patchSans() {
@@ -278,7 +266,7 @@ function patchSans() {
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       [[ "${#BASEOPT[@]}" -gt 0 ]] && cmd+=( "${BASEOPT[@]}" )
       # shellcheck disable=SC2015
-      "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done
   done
 }
@@ -295,13 +283,14 @@ function patchMono() {
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       [[ "${#BASEOPT[@]}" -gt 0 ]] && cmd+=( "${BASEOPT[@]}" )
       # shellcheck disable=SC2015
-      "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
     done;
   done < <( fd -u -tf -e ttf -e otf -E '*NerdFont*' -E '*[Uu]pright*' -E out --full-path "${path}" )
 }
 
 # build Titillium Upright NF by delegating to the upright pipeline ( prep.py italic staging + «/» fix -> font-patcher -> fixnf.py metadata ). this only generates italic + NF + fixes metadata.
-#   source: Titillium (already-extracted vendor OTFs)   target: Titillium/upright
+#   source: Titillium (already-extracted vendor OTFs)
+#   target: Titillium/upright
 function patchTitilliumUpright() {
   local fonts="${SCRIPT_DIR}/Titillium/upright"  # final deliverables
   local work="${fonts}/.build"                   # intermediate build/ + nf/
@@ -317,18 +306,16 @@ function patchTitilliumUpright() {
     srcLabel="${srcLabel:+${srcLabel}, }${d#"${SCRIPT_DIR}/"}"     # repo-relative, comma-joined
   done
   runCmd+=( --output "${work}" --fonts "${fonts}" --patcher "${FONT_PATCHER}" )
-  "${dryrun}" && runCmd+=( --dry-run )
+  "${DRYRUN}" && runCmd+=( --dry-run )
 
   message "titillium upright" "${srcLabel}" "${fonts#"${SCRIPT_DIR}/"}"
   "${runCmd[@]}"
-  # clean intermediates only on success; a failed/interrupted run keeps .build
-  # (partial nf/ + logs) for inspection, and set -e already aborted before here
-  "${dryrun}" || rm -rf "${work}"
+  # clean intermediates only on success; a failed/interrupted run keeps .build (partial nf/ + logs) for inspection, and set -e already aborted before here
+  "${DRYRUN}" || rm -rf "${work}"
 }
 
-# build Lekton Nerd Font Mono ( via patchMono ), then add a centered dot to '0' in place
-# so 0 is distinguishable from o. delegates the dot to dotzero.py ( needs fontforge ).
-#   source: Lekton/Lekton-*.ttf -> Lekton/LektonNerdFontMono-*.{otf,ttf} ( 0 dotted )
+# build Lekton Nerd Font Mono ( via patchMono ), then add a centered dot to '0' and enlarge the tiny bullet '•'(\u2022) in place.
+#   source: Lekton/Lekton-*.ttf -> Lekton/LektonNerdFontMono-*.{otf,ttf} ( 0 dotted, • enlarged )
 # forwards "$@" ( --ext / -- PATCHER_OPT ) to patchMono; honors --dry-run.
 function patchLekton() {
   local path='./Lekton'
@@ -344,17 +331,17 @@ function patchLekton() {
   shopt -u nullglob
   test "${#nf[@]}" -eq 0 && return 0
 
-  message "dotzero '0'" "$(basename "${path}")" "${path}"
-  local -a dotCmd=( fontforge -script "${DOTZERO}" -o "${path}" "${nf[@]}" )
+  message "dotzero '0' + '• (\u2022)'" "$(basename "${path}")" "${path}"
+  local -a dotCmd=( fontforge -script "${DOTZERO}" --bullet -o "${path}" "${nf[@]}" )
   # shellcheck disable=SC2015
-  "${dryrun}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${dotCmd[@]}")" || "${dotCmd[@]}" 2>/dev/null
+  "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${dotCmd[@]}")" || "${dotCmd[@]}" 2>/dev/null
 }
 
 function patchAllMono() {
   patchOperatorMono
   patchMonaco
   patchRecursiveMono
-  patchLekton                 # lekton: build NF + dot the '0'
+  patchLekton                 # lekton: build NF + dot the '0' + enlarge the bullet '•' (\u2022)
 
   # common mono
   while read -r _path; do
@@ -403,7 +390,7 @@ while [[ $# -gt 0 ]]; do
     --recursive-mono        ) RECURSIVE_M=true         ; shift   ;;
     --titillium-upright     ) TITILLIUM_UP=true        ; shift   ;;
     --lekton                ) LEKTON=true              ; shift   ;;
-    --dry-run               ) dryrun=true              ; shift   ;;
+    --dry-run               ) DRYRUN=true              ; shift   ;;
     -a | --all              ) ALL=true                 ; shift   ;;
     --all-sans              ) ALL_SANS=true            ; shift   ;;
     --all-mono              ) ALL_MONO=true            ; shift   ;;
