@@ -3,7 +3,7 @@
 #      FileName : build.sh
 #        Author : marslo
 #       Created : 2026-09-04 04:12:03
-#    LastChange : 2026-09-04 04:12:56
+#    LastChange : 2026-09-04 05:06:09
 # =============================================================================
 # build the ligaturized desktop Lekton ( LektonLig ) — the complex half of the Lekton pipeline, kept out of the repo-root build.sh:
 #
@@ -23,7 +23,8 @@ declare -r HERE
 declare -r BOLDITALIC="${HERE}/bolditalic.py"
 declare -r DOTZERO="${HERE}/dotzero.py"
 declare -r GLYPHFIX="${HERE}/glyphfix.py"
-declare -r ROOT="$( cd "${HERE}/.." && pwd )"
+# shellcheck disable=SC2155
+declare -r ROOT="$( git -C "${HERE}" rev-parse --show-toplevel 2>/dev/null || ( cd "${HERE}/.." && pwd ) )"
 declare -r LIGATURIZE="${ROOT}/ligaturize.sh"       # shared, repo-root
 declare -r LIG="${HERE}/LektonLig"
 declare DRYRUN=false

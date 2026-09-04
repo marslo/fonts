@@ -206,20 +206,22 @@ fontforge -lang=py -script ligaturize.py \
   Blex/IBMPlexMono/IBMPlexMono-Regular.otf \
   <span class="flag">--output-dir</span> Blex/IBMPlexMonoLig \
   <span class="flag">--output-name</span> 'IBMPlexMonoLig' <span class="flag">--prefix</span> ''    <span class="cmt"># → IBMPlexMonoLig-Regular.otf ( CFF in → CFF out )</span></code></pre>
-        <p>Looping every weight is enough boilerplate to live in its own script, <code>Blex/ligaturize.sh</code>:</p>
-        <pre><code>bash Blex/ligaturize.sh <span class="flag">--from</span> ./Blex/IBMPlexMono <span class="flag">--to</span> ./Blex/IBMPlexMonoLig</code></pre>
+        <p>Book generation + looping every weight lives in <code>Blex/build.sh</code>, which calls the shared repo-root <code>ligaturize.sh</code> with an explicit <code>--name</code>:</p>
+        <pre><code>bash Blex/build.sh    <span class="cmt"># Book (350) + ligaturize all faces → IBMPlexMonoLig/</span>
+<span class="cmt"># under the hood: bash ligaturize.sh --from &lt;dir&gt; --to ./Blex/IBMPlexMonoLig --name IBMPlexMonoLig</span></code></pre>
       </li>
       <li>
         <h3>Nerd Font patch</h3>
-        <p>Patch each ligaturized face. font-patcher keeps the <code>calt</code> table intact and layers the Nerd Font glyphs on top.</p>
+        <p>Patch each ligaturized face into its own temp dir, then <code>blex-fixnames.py</code> restamps the name + filename by <code>usWeightClass</code> — font-patcher folds the non-standard Book&nbsp;(350) onto Regular, so this is what keeps Book a distinct face.</p>
         <pre><code>font-patcher Blex/IBMPlexMonoLig/IBMPlexMonoLig-Regular.otf \
   --mono --complete --careful --quiet --no-progressbars \
-  -ext otf -out Blex/IBMPlexMonoLigNF</code></pre>
+  -ext otf -out &lt;tmp&gt;
+python3 Blex/blex-fixnames.py <span class="flag">--in</span> &lt;tmp&gt;/*.otf <span class="flag">--out-dir</span> Blex/IBMPlexMonoLigNF</code></pre>
       </li>
       <li>
         <h3>Or wire it into one command</h3>
-        <p>Stage&nbsp;2 goes in <code>ligaturize.sh</code>; stage&nbsp;3 (the Nerd Font loop) stays in <code>build.sh</code> as <code>patchBlex</code>. Then the whole build is:</p>
-        <pre><code>bash build.sh <span class="flag">--blex</span>    <span class="cmt"># ligaturize → NF, all 18 faces ( otf-only )</span></code></pre>
+        <p>Stages&nbsp;0–2 ( Book + ligatures ) live in <code>Blex/build.sh</code>; stage&nbsp;3 ( the Nerd Font loop + <code>blex-fixnames.py</code> ) stays in the repo-root <code>build.sh</code> as <code>patchBlex</code>. Then the whole build is:</p>
+        <pre><code>bash build.sh <span class="flag">--blex</span>    <span class="cmt"># Book + ligaturize → NF, all 18 faces ( otf-only )</span></code></pre>
       </li>
     </ol>
   </section>

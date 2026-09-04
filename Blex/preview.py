@@ -23,7 +23,7 @@ except ImportError:
     sys.exit( "error: run me via 'fontforge -script preview.py ...' (needs the fontforge module)" )
 
 HERE = os.path.dirname( os.path.abspath( sys.argv[ 0 ] ) )
-FONT = os.path.join( HERE, 'IBMPlexMonoLig', 'IBMPlexMonoLig-Regular.ttf' )
+FONT = os.path.join( HERE, 'IBMPlexMonoLig', 'IBMPlexMonoLig.otf' )   # ligaturized Regular ( CFF )
 TITLE = 'IBMPlexMonoLig'
 SUBTITLE = 'IBM Plex Mono + Fira Code ligatures ( rendered via calt )'
 SAMPLES = [ '-> => <- <-> ->> =>>',
@@ -37,7 +37,6 @@ PAD = 26
 SAMPLE_PX = 30
 ROW_H = 54
 HEAD_H = 70
-WIDTH = 720
 
 STYLE = ( '<style>'
           '.pbg{fill:#21262d;stroke:#ffffff14}'
@@ -89,8 +88,13 @@ def shapeGlyphs( text ):
     return [ tok.split( '=' )[ 0 ] for tok in out.split( '|' ) ] if out else []
 
 
+def textWidth( s, per_char ):
+    """ Rough pixel width of a proportional label; a little slack ( never clip ) is fine. """
+    return len( s ) * per_char
+
+
 def renderRow( font, names, x, baseline ):
-    """ Render shaped glyph names ( by name ) as outlines; y-flipped <g class="ink">. """
+    """ Render shaped glyph names as outlines; returns ( <g> string, rendered row width in px ). """
     em = font.em or 1000
     k = SAMPLE_PX / float( em )
     penx = 0
@@ -104,21 +108,33 @@ def renderRow( font, names, x, baseline ):
         if d:
             parts.append( f'<path transform="translate({penx} 0)" d="{d}"/>' )
         penx += glyph.width
-    return f'<g class="ink" transform="translate({x:.0f} {baseline:.0f}) scale({k:.4f} {-k:.4f})">{"".join( parts )}</g>'
+    g = f'<g class="ink" transform="translate({x:.0f} {baseline:.0f}) scale({k:.4f} {-k:.4f})">{"".join( parts )}</g>'
+    return g, penx * k
 
 
 def build():
     total_h = HEAD_H + len( SAMPLES ) * ROW_H + PAD - 10
     font = fontforge.open( FONT )
+    font.is_quadratic = True              # CFF ( cubic ) -> quadratic so quadPath works
     try:
-        out = [ ( f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {WIDTH} {total_h}" '
-                  f'font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">' ), STYLE,
-                f'<rect class="pbg" x="0.5" y="0.5" width="{WIDTH - 1}" height="{total_h - 1}" rx="14"/>',
-                f'<text class="cap" x="{PAD}" y="34">{TITLE}</text>',
-                f'<text class="cap2" x="{PAD}" y="54">{SUBTITLE}</text>' ]
+        # first pass: render every row, track the widest rendered row
+        groups = []
+        max_row = 0.0
         for i, sample in enumerate( SAMPLES ):
             baseline = HEAD_H + i * ROW_H + ROW_H * 0.62
-            out.append( renderRow( font, shapeGlyphs( sample ), PAD, baseline ) )
+            g, w = renderRow( font, shapeGlyphs( sample ), PAD, baseline )
+            groups.append( g )
+            max_row = max( max_row, w )
+        # fit the canvas to the widest of the sample rows / the two labels — no fixed right margin.
+        # per-char factors calibrated to DejaVu ( widest common sans ), so narrower viewer fonts never clip
+        content = max( max_row, textWidth( TITLE, 8.0 ), textWidth( SUBTITLE, 5.3 ) )
+        width = int( content + 2 * PAD )
+        out = [ ( f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {total_h}" '
+                  f'font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">' ), STYLE,
+                f'<rect class="pbg" x="0.5" y="0.5" width="{width - 1}" height="{total_h - 1}" rx="14"/>',
+                f'<text class="cap" x="{PAD}" y="34">{TITLE}</text>',
+                f'<text class="cap2" x="{PAD}" y="54">{SUBTITLE}</text>' ]
+        out += groups
         out.append( '</svg>' )
         return '\n'.join( out )
     finally:
@@ -130,15 +146,17 @@ def main( argv ):
     p.add_argument( '-o', '--out', default=os.path.join( HERE, 'assets', 'ligatures.svg' ), help='output svg path' )
     args = p.parse_args( argv )
 
-    os.path.isfile( FONT ) or sys.exit( f"error: ligature font not found: {FONT} ( run ligaturize.sh first )" )
+    os.path.isfile( FONT ) or sys.exit( f"error: ligature font not found: {FONT} ( run Blex/build.sh first )" )
     try:
         subprocess.check_output( [ 'hb-shape', '--version' ], stderr=subprocess.DEVNULL )
     except ( OSError, subprocess.CalledProcessError ):
         sys.exit( 'error: hb-shape not found ( brew install harfbuzz )' )
 
     os.makedirs( os.path.dirname( args.out ), exist_ok=True )
+    # strip per-line trailing whitespace and end with exactly one newline ( pre-commit clean )
+    svg = '\n'.join( line.rstrip() for line in build().split( '\n' ) ) + '\n'
     with open( args.out, 'w' ) as f:
-        f.write( build() )
+        f.write( svg )
     print( f"wrote {args.out}" )
 
 

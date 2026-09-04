@@ -13,7 +13,7 @@ check-filename = true
 check-file = true
 unicode=true
 locale = "en"
-extend-ignore-re = []
+extend-ignore-re = [ 'mis-named' ]
 
 [default.extend-identifiers]
 # whole-token allowlist ( checked before word-splitting; avoids 'OTFs' -> 'OT' )

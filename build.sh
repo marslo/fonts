@@ -68,7 +68,7 @@ OPTIONS
   $(c G)--recursive-mono$(c)        patch for recursive mono font
   $(c G)--titillium-upright$(c)     build Titillium Upright NF: italic + NF + metadata fix. $(c 0Wdi)( src $(c 0Mi)Titillium$(c 0Wdi) -> target $(c 0Mi)Titillium/upright $(c 0Wdi))$(c)
   $(c G)--lekton$(c)                build Lekton + Fira Code ligatures + NF $(c 0Wdi)( Lekton -> LektonLig -> LektonLigNF, via Lekton/build.sh )$(c)
-  $(c G)--blex$(c)                  ligaturize IBM Plex Mono $(c 0Wdi)( Fira Code ligas: IBMPlexMono -> IBMPlexMonoLig -> NF, via ligaturize.sh )$(c)
+  $(c G)--blex$(c)                  build IBM Plex Mono + Book (350) + Fira Code ligatures + NF $(c 0Wdi)( IBMPlexMono -> IBMPlexMonoLig -> NF, via Blex/build.sh )$(c)
 
   $(c G)--dry-run$(c)               show what would be done, but do not execute
   $(c G)-h$(c), $(c G)--help$(c)              show this help message
@@ -358,26 +358,30 @@ function patchLekton() {
   "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -f %s$(c)\n" "${path}/LektonNerdFontMono-*.{otf,ttf}" || rm -f "${path}"/LektonNerdFontMono-*.otf "${path}"/LektonNerdFontMono-*.ttf
 }
 
-# build IBM Plex Mono with Fira Code ligatures ( via ligaturize.sh -> /opt/Ligaturizer ), then Nerd Font patch.
-#   ./Blex/IBMPlexMono --lig--> ./Blex/IBMPlexMonoLig --NF--> ./Blex/IBMPlexMonoLigNF
+# build IBM Plex Mono + Book (350) + Fira Code ligatures, then Nerd Font patch ( otf-only ):
+#   Blex/build.sh -> Blex/IBMPlexMonoLig ( Book + Fira Code ligatures )
+#   then font-patcher -> Blex/IBMPlexMonoLigNF/ ( via blex-fixnames.py ) ; honors --dry-run.
 function patchBlex() {
-  local ligsh="${SCRIPT_DIR}/ligaturize.sh"
-  local srcdir='./Blex/IBMPlexMono'
-  local ligdir='./Blex/IBMPlexMonoLig'
-  local nfdir='./Blex/IBMPlexMonoLigNF'
+  local path='./Blex'
+  local ligbuild="${SCRIPT_DIR}/Blex/build.sh"                # Book + ligaturize -> IBMPlexMonoLig/
+  local ligdir="${path}/IBMPlexMonoLig"                       # ligaturized intermediate ( CFF )
+  local nfdir="${path}/IBMPlexMonoLigNF"                      # + Nerd Font glyphs ( otf-only )
+  local fixnames="${SCRIPT_DIR}/Blex/blex-fixnames.py"       # canonical name + filename restamp
 
-  test -f "${ligsh}" || die "ligaturize.sh not found: ${ligsh}"
+  test -f "${ligbuild}" || die "Blex/build.sh not found: ${ligbuild}"
+  test -f "${fixnames}" || die "blex-fixnames.py not found: ${fixnames}"
   command -v fontforge >/dev/null 2>&1 || die "fontforge required ( brew install fontforge )"
 
-  # 1. ligaturize IBMPlexMono -> IBMPlexMonoLig ( complex step, delegated to ligaturize.sh )
-  message "ligaturize ( IBM Plex Mono + Fira Code )" "$(basename "${srcdir}")" "${ligdir}"
-  local -a ligCmd=( bash "${ligsh}" --from "${srcdir}" --to "${ligdir}" --name IBMPlexMonoLig )
+  # 1. Book + ligatures ( delegated to Blex/build.sh ) -> IBMPlexMonoLig/
+  message "build IBMPlexMonoLig ( Book + ligatures )" "$(basename "${path}")" "${ligdir}"
+  local -a ligCmd=( bash "${ligbuild}" )
   "${DRYRUN}" && ligCmd+=( --dry-run )
   "${ligCmd[@]}"
 
-  # 2. Nerd Font patch IBMPlexMonoLig -> IBMPlexMonoLigNF ( kept in build.sh )
+  # 2. Nerd Font patch IBMPlexMonoLig -> IBMPlexMonoLigNF/ ( otf-only ). font-patcher names by usWeightClass ( folding the non-standard Book 350 onto Regular )
+  #    and can leak ligaturize's abbreviated weights into some italic families, so patch each face into its own temp dir then blex-fixnames.py restamps name + filename from usWeightClass + the italic bit -- keeps Book distinct + every face canonical.
   shopt -s nullglob
-  local -a ligFonts=( "${ligdir}"/*.ttf "${ligdir}"/*.otf )
+  local -a ligFonts=( "${ligdir}"/*.otf )
   shopt -u nullglob
   test "${#ligFonts[@]}" -eq 0 && return 0
 
@@ -385,14 +389,19 @@ function patchBlex() {
   # shellcheck disable=SC2015
   "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -rf %q$(c)\n" "${nfdir}" || rm -rf "${nfdir:?}"
   "${DRYRUN}" || mkdir -p "${nfdir}"
-
+  local _f _tmp
+  local -a _patched=()
   for _f in "${ligFonts[@]}"; do
-    for _e in otf; do                        # otf-only ( Blex vendor + Book are CFF )
-      message "${_e}" "$(basename "${_f}")" "${nfdir}"
-      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${nfdir}" )
-      # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
-    done
+    message "otf" "$(basename "${_f}")" "${nfdir}"
+    if "${DRYRUN}"; then
+      printf "  $(c Wi)>> \$ %s -ext otf -out <tmp> | python3 %s --in <tmp>/*.otf --out-dir %q$(c)\n" "${FONT_PATCHER} $(basename "${_f}")" "${fixnames}" "${nfdir}"
+      continue
+    fi
+    _tmp="$( mktemp -d )"
+    "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext otf -out "${_tmp}" 2>/dev/null
+    shopt -s nullglob; _patched=( "${_tmp}"/*.otf ); shopt -u nullglob
+    test -f "${_patched[0]:-}" && python3 "${fixnames}" --in "${_patched[0]}" --out-dir "${nfdir}"
+    rm -rf "${_tmp}"
   done
 }
 
