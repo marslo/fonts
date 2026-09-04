@@ -319,22 +319,37 @@ function patchTitilliumUpright() {
 # forwards "$@" ( --ext / -- PATCHER_OPT ) to patchMono; honors --dry-run.
 function patchLekton() {
   local path='./Lekton'
-  patchMono "${path}" "$@"          # build NF first ( fresh 0, then dotted below )
+  local bi="${path}/Lekton-BoldItalic.ttf"                       # transient synth source, removed after NF build
+  local bolditalic="${SCRIPT_DIR}/Lekton/bolditalic.py"          # synth Bold Italic ( italic shapes + bold weight )
 
-  test -f "${DOTZERO}" || die "dotzero not found: ${DOTZERO}"
-  command -v fontforge >/dev/null 2>&1 || die "fontforge required for dotzero ( brew install fontforge )"
+  test -f "${bolditalic}" || die "bolditalic not found: ${bolditalic}"
+  test -f "${DOTZERO}"    || die "dotzero not found: ${DOTZERO}"
+  command -v fontforge >/dev/null 2>&1 || die "fontforge required ( brew install fontforge )"
 
-  # dot every freshly-built NerdFont face in place; skip the vendor source ttf
+  # 1. synthesize the missing Bold Italic so patchMono globs it as a fourth source
+  message "bolditalic ( synth Bold Italic )" "$(basename "${path}")" "${path}"
+  local -a biCmd=( fontforge -script "${bolditalic}" --italic "${path}/Lekton-Italic.ttf" --bold "${path}/Lekton-Bold.ttf" -o "${bi}" )
+  # shellcheck disable=SC2015
+  "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${biCmd[@]}")" || "${biCmd[@]}" 2>/dev/null
+
+  # 2. build NF from all four sources ( incl. the fresh Bold Italic )
+  patchMono "${path}" "$@"
+
+  # 3. dot every freshly-built NerdFont face + enlarge the bullet in place
   local -a nf=()
   shopt -s nullglob
   nf=( "${path}"/*NerdFont*.otf "${path}"/*NerdFont*.ttf )
   shopt -u nullglob
-  test "${#nf[@]}" -eq 0 && return 0
+  if test "${#nf[@]}" -gt 0; then
+    message "dotzero '0' + '• (U+2022)'" "$(basename "${path}")" "${path}"
+    local -a dotCmd=( fontforge -script "${DOTZERO}" --square -o "${path}" "${nf[@]}" )
+    # shellcheck disable=SC2015
+    "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${dotCmd[@]}")" || "${dotCmd[@]}" 2>/dev/null
+  fi
 
-  message "dotzero '0' + '• (\u2022)'" "$(basename "${path}")" "${path}"
-  local -a dotCmd=( fontforge -script "${DOTZERO}" --bullet -o "${path}" "${nf[@]}" )
+  # 4. drop the transient Bold Italic source ( the vendor family has no such face )
   # shellcheck disable=SC2015
-  "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${dotCmd[@]}")" || "${dotCmd[@]}" 2>/dev/null
+  "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -f %q$(c)\n" "${bi}" || rm -f "${bi}"
 }
 
 function patchAllMono() {

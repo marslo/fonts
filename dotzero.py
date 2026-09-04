@@ -4,13 +4,17 @@
 """
 Add a centered dot to the 'zero' glyph so 0 is distinguishable from o, and optionally enlarge the tiny 'bullet' (•, U+2022) glyph.
 
+The bullet can grow two ways ( mutually exclusive ):
+  --square  keep Lekton's original square outline, just scaled up ( default )
+  --bullet  replace it with a round dot
+
 Run with fontforge's python:  fontforge -script dotzero.py [opts] <in.otf|dir>...
 Keeps advance width (monospace-safe); originals are never modified.
 
 USAGE
     fontforge -script dotzero.py -o Lekton Lekton/*NerdFont*.otf
-    fontforge -script dotzero.py --bullet -o Lekton Lekton/*NerdFont*.otf Lekton/*NerdFont*.ttf      # == --bullet 100
-    fontforge -script dotzero.py --bullet 120 -n Lekton/*NerdFont*.otf
+    fontforge -script dotzero.py --square -o Lekton Lekton/*NerdFont*.otf Lekton/*NerdFont*.ttf   # == --square 100 ( square )
+    fontforge -script dotzero.py --bullet -o Lekton Lekton/*NerdFont*.otf                          # == --bullet 100 ( round )
 """
 
 import argparse
@@ -19,6 +23,7 @@ import sys
 
 try:
     import fontforge
+    import psMat
 except ImportError:
     sys.exit( "error: run me via 'fontforge -script dotzero.py ...' (needs the fontforge python module)" )
 
@@ -77,6 +82,67 @@ def setCircle( glyph, radius ):
     glyph.correctDirection()
 
 
+def scaleBullet( glyph, target_w ):
+    """ Scale the existing bullet outline about its center to target width, keeping shape and advance width. """
+    x0, y0, x1, y1 = glyph.boundingBox()
+    w = x1 - x0
+    if w <= 0:
+        return
+    cx = ( x0 + x1 ) / 2.0
+    cy = ( y0 + y1 ) / 2.0
+    width = glyph.width
+    m = psMat.compose( psMat.translate( -cx, -cy ),
+                       psMat.compose( psMat.scale( target_w / w ), psMat.translate( cx, cy ) ) )
+    glyph.transform( m )
+    glyph.width = width                      # transform may shift the advance; keep it monospace
+    glyph.round()
+    glyph.correctDirection()
+
+
+def bulletHome( font ):
+    """ ( center x, center y, advance width ) for a freshly created bullet on a face that lacks one. """
+    em = font.em or 1000
+    ref = 'period' if 'period' in font else ( 'zero' if 'zero' in font else None )
+    width = font[ ref ].width if ref else round( em / 2 )
+    return width / 2.0, 0.30 * em, width      # cy ~ middot height; upright Lekton centers the dot at 299/1000
+
+
+def makeCircle( font, radius ):
+    """ Create a U+2022 'bullet' as a centered round dot for faces that lack one ( monospace-safe ). """
+    cx, cy, width = bulletHome( font )
+    glyph = font.createChar( 0x2022, 'bullet' )
+    glyph.width = width
+    quadratic = glyph.layers[ 'Fore' ].is_quadratic
+    layer = fontforge.layer()
+    layer.is_quadratic = quadratic
+    layer += circleContour( cx, cy, radius, quadratic )
+    glyph.layers[ 'Fore' ] = layer
+    glyph.correctDirection()
+
+
+def makeSquare( font, half ):
+    """ Create a U+2022 'bullet' as a centered square ( Lekton bullet aspect ) for faces that lack one. """
+    cx, cy, width = bulletHome( font )
+    hw = half
+    hh = half * 64.0 / 58.0                  # original Lekton bullet is 58 wide x 64 tall
+    glyph = font.createChar( 0x2022, 'bullet' )
+    glyph.width = width
+    quadratic = glyph.layers[ 'Fore' ].is_quadratic
+    c = fontforge.contour()
+    c.is_quadratic = quadratic
+    c.moveTo( cx - hw, cy - hh )
+    c.lineTo( cx - hw, cy + hh )
+    c.lineTo( cx + hw, cy + hh )
+    c.lineTo( cx + hw, cy - hh )
+    c.closed = True
+    layer = fontforge.layer()
+    layer.is_quadratic = quadratic
+    layer += c
+    glyph.layers[ 'Fore' ] = layer
+    glyph.round()
+    glyph.correctDirection()
+
+
 def rename( font, suffix ):
     """ Append suffix to family/full/ps names so the font can coexist with the original. """
     # setting these fields makes generate() rebuild the matching name-table strings
@@ -123,13 +189,23 @@ def process( path, args ):
         else:
             print( f"skip (no '{args.glyph}'): {path}", file=sys.stderr )
 
-        # enlarge the bullet ( optional )
-        if args.bullet_radius is not None:
+        # enlarge the bullet, creating it when the face lacks one ( --square or --bullet )
+        if args.square_half is not None:
+            half = args.square_half * scale
             if 'bullet' in font:
-                setCircle( font[ 'bullet' ], args.bullet_radius * scale )
-                notes.append( f"bullet r={args.bullet_radius * scale:.0f}" )
+                scaleBullet( font[ 'bullet' ], 2 * half )
+                notes.append( f"square w={2 * half:.0f}" )
             else:
-                print( f"skip (no 'bullet'): {path}", file=sys.stderr )
+                makeSquare( font, half )
+                notes.append( f"square w={2 * half:.0f} (created)" )
+        elif args.bullet_radius is not None:
+            r = args.bullet_radius * scale
+            if 'bullet' in font:
+                setCircle( font[ 'bullet' ], r )
+                notes.append( f"bullet r={r:.0f}" )
+            else:
+                makeCircle( font, r )
+                notes.append( f"bullet r={r:.0f} (created)" )
 
         if not notes:
             return False
@@ -158,7 +234,9 @@ def parseArgs( argv ):
     p.add_argument( '-r', '--radius', type=float, default=62.0, help='dot radius at em=1000 (default 62)' )
     p.add_argument( '--bold-radius', type=float, help='radius for bold faces (default: radius + 10)' )
     p.add_argument( '-g', '--glyph', default='zero', help="glyph to modify (default 'zero')" )
-    p.add_argument( '--bullet', dest='bullet_radius', nargs='?', const=100.0, type=float, default=None, metavar='RADIUS', help="also enlarge the 'bullet' (•, U+2022) to a circle of RADIUS at em=1000 (default 100 ~= 20%% of em)" )
+    bullet = p.add_mutually_exclusive_group()
+    bullet.add_argument( '--square', dest='square_half', nargs='?', const=100.0, type=float, default=None, metavar='N', help="enlarge the 'bullet' (•, U+2022) keeping its square shape, half-size N at em=1000 (default 100 -> 200 wide)" )
+    bullet.add_argument( '--bullet', dest='bullet_radius', nargs='?', const=100.0, type=float, default=None, metavar='N', help="enlarge the 'bullet' (•, U+2022) as a round dot of radius N at em=1000 (default 100 -> diameter 200)" )
     p.add_argument( '--rename', metavar='SUFFIX', help="append SUFFIX to family name for coexistence, e.g. ' Dotted'" )
     p.add_argument( '-n', '--dry-run', action='store_true', help='report actions without writing files' )
     args = p.parse_args( argv )

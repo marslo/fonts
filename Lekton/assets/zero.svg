@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 104" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<style>.pbg{fill:#21262d;stroke:#ffffff14}.cap{fill:#e6edf3;font-size:16px;font-weight:700}.cap2{fill:#8b98a5;font-size:12.5px}.col{fill:#e6edf3;font-size:13.5px;font-weight:700}.lbl{fill:#8b98a5;font-size:13.5px}.ink{fill:#cbb994}.dash{fill:#5b636c;font-size:20px}.rule{stroke:#ffffff12}.vrule{stroke:#ffffff0d}.tag{fill:#e6edf3;font-size:12px;font-weight:700}.sub{fill:#8b98a5;font-size:10.5px}</style>
+<rect class="pbg" x="0.5" y="0.5" width="319" height="103" rx="12"/>
+<line class="vrule" x1="160" y1="12" x2="160" y2="92"/>
+<text class="tag" x="16" y="26">before</text>
+<text class="sub" x="60" y="26">0 looks like o</text>
+<g class="ink" transform="translate(28 82) scale(0.0520 -0.0520)"><path transform="translate(0 0)" d="M103 569Q148 644 250 644Q351 644 396 569Q441 494 441 318Q441 143 396 67Q351 -9 250 -9Q148 -9 103 67Q58 143 58 318Q58 494 103 569ZM249 43Q321 43 349 107Q377 171 377 320Q377 468 350 530Q323 592 250 592Q177 592 150 530Q122 467 122 319Q122 171 150 107Q177 43 249 43Z"/><path transform="translate(500 0)" d="M250 481Q441 481 441 236Q441 -9 250 -9Q59 -9 59 236Q59 481 250 481ZM116 236Q116 43 250 43Q384 43 384 236Q384 429 250 429Q116 429 116 236Z"/></g>
+<text class="tag" x="176" y="26">after</text>
+<text class="sub" x="220" y="26">dotted 0</text>
+<g class="ink" transform="translate(188 82) scale(0.0520 -0.0520)"><path transform="translate(0 0)" d="M103 569Q148 644 250 644Q351 644 396 569Q441 494 441 318Q441 143 396 67Q351 -9 250 -9Q148 -9 103 67Q58 143 58 318Q58 494 103 569ZM249 43Q321 43 349 107Q377 171 377 320Q377 468 350 530Q323 592 250 592Q177 592 150 530Q122 467 122 319Q122 171 150 107Q177 43 249 43ZM312 318Q312 292 294 274Q275 256 250 256Q224 256 206 274Q188 292 188 318Q188 343 206 362Q224 380 250 380Q275 380 294 362Q312 343 312 318Z"/><path transform="translate(500 0)" d="M250 481Q441 481 441 236Q441 -9 250 -9Q59 -9 59 236Q59 481 250 481ZM116 236Q116 43 250 43Q384 43 384 236Q384 429 250 429Q116 429 116 236Z"/></g>
+</svg>
