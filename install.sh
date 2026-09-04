@@ -4,7 +4,7 @@
 #     FileName : install.sh
 #       Author : marslo
 #      Created : 2024-04-16 01:39:12
-#   LastChange : 2026-09-04 01:27:00
+#   LastChange : 2026-09-04 01:51:21
 #=============================================================================
 
 set -euo pipefail
@@ -146,6 +146,13 @@ while [[ $# -gt 0 ]]; do
     --*          ) die "unknown option: $1"    ;;
     *            ) paramList+=( "$1" ) ; shift ;;
   esac
+done
+
+# strip trailing slash(es) so a DIR arg like "Blex/" resolves the same as "Blex"
+for i in "${!paramList[@]}"; do
+  while [[ "${paramList[${i}]}" == */ && "${#paramList[${i}]}" -gt 1 ]]; do
+    paramList["${i}"]="${paramList["${i}"]%/}"
+  done
 done
 
 function parseFontGroup() {

@@ -17,7 +17,8 @@ extend-ignore-re = []
 
 [default.extend-identifiers]
 # whole-token allowlist ( checked before word-splitting; avoids 'OTFs' -> 'OT' )
-OTFs = "OTFs"
+OTFs = 'OTFs'
 
 [default.extend-words]
 # <typo> = "<correction>"
+Accademia = 'Accademia'
