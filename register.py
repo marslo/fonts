@@ -13,7 +13,7 @@ Steps (mirror fixnf.py install()):
 Idempotent and safe to re-run.
 
 Usage:
-    ./register-fonts.py --input <file|dir> [--dry-run]
+    python3 register.py --input <file|dir> [--dry-run]
 """
 
 import glob

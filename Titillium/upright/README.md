@@ -1,3 +1,33 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Titillium Upright → Nerd Font toolkit (simplified)](#titillium-upright-%E2%86%92-nerd-font-toolkit-simplified)
+  - [What this is (and how it differs from the old 5-step `up/` toolkit)](#what-this-is-and-how-it-differs-from-the-old-5-step-up-toolkit)
+  - [Requirements](#requirements)
+  - [Usage](#usage)
+  - [Output layout](#output-layout)
+  - [The scripts](#the-scripts)
+    - [`prep.py` — stage sources by role, repair guillemets](#preppy--stage-sources-by-role-repair-guillemets)
+    - [`guillemet.py` — repair single-chevron `«` / `»`](#guillemetpy--repair-single-chevron-%C2%AB--%C2%BB)
+    - [`fixnf.py` — unify the patched Nerd Font metadata](#fixnfpy--unify-the-patched-nerd-font-metadata)
+    - [`register.py` — flush the cache + register any font (generic `--install`)](#registerpy--flush-the-cache--register-any-font-generic---install)
+  - [Verify it worked](#verify-it-worked)
+    - [`verify.py` — inspect + check the built faces (no install needed)](#verifypy--inspect--check-the-built-faces-no-install-needed)
+      - [What the reported fields mean](#what-the-reported-fields-mean)
+  - [Flush the font cache](#flush-the-font-cache)
+  - [Troubleshooting](#troubleshooting)
+  - [Pitfalls and dirty-data analysis](#pitfalls-and-dirty-data-analysis)
+    - [Why the family is needed at all](#why-the-family-is-needed-at-all)
+    - [The `head.macStyle` swapped-bit trap (the real root cause of "bold looks italic")](#the-headmacstyle-swapped-bit-trap-the-real-root-cause-of-bold-looks-italic)
+    - [font-patcher rewrites the family name](#font-patcher-rewrites-the-family-name)
+    - [How a false italic was pinned down (diagnostic evidence)](#how-a-false-italic-was-pinned-down-diagnostic-evidence)
+    - [Correct style bits after the fix](#correct-style-bits-after-the-fix)
+    - [Diagnose a false italic reading](#diagnose-a-false-italic-reading)
+  - [Notes](#notes)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Titillium Upright → Nerd Font toolkit (simplified)
 
 One command turns the vendor Titillium zip into a clean **"Titillium Nerd Font Upright"** family whose upright faces render truly upright and whose italic faces slant correctly on macOS (CoreText) and in browsers.
@@ -171,10 +201,10 @@ font-patcher mangles naming/flags and carries over Titillium's dirty CFF `Italic
 
 `--install` performs the sequence that actually refreshes CoreText on macOS 14+: copy → `rm -rf ~/Library/Caches/com.apple.FontRegistry` → `killall fontd` → `CTFontManagerRegisterFontsForURL(..., .user, ...)`.
 
-### `register-fonts.py` — flush the cache + register any font (generic `--install`)
+### `register.py` — flush the cache + register any font (generic `--install`)
 
 ```bash
-python3 register-fonts.py --input <file|dir> [--dry-run]
+python3 register.py --input <file|dir> [--dry-run]
 ```
 
 Standalone, **font-agnostic** version of `fixnf.py --install`. Point `--input` at one font file or a directory of fonts already sitting where you want them (e.g. `~/Library/Fonts`); it registers each face **at its given path** — it never copies.
@@ -190,8 +220,8 @@ Standalone, **font-agnostic** version of `fixnf.py --install`. Point `--input` a
 Runs the same CoreText refresh as `--install`, at `.user` scope: `rm -rf ~/Library/Caches/com.apple.FontRegistry` → `killall fontd` → per face `CTFontManagerUnregisterFontsForURL(.user)` then `CTFontManagerRegisterFontsForURL(.user)` (unregister first avoids err `-50`). Idempotent — safe to re-run. Needs `swift` (Xcode CLT). Fully quit and reopen the browser/app afterwards.
 
 ```bash
-python3 register-fonts.py --input ~/Library/Fonts/MyFont.otf          # one file
-python3 register-fonts.py --input ~/Library/Fonts --dry-run           # preview a whole dir
+python3 register.py --input ~/Library/Fonts/MyFont.otf          # one file
+python3 register.py --input ~/Library/Fonts --dry-run           # preview a whole dir
 ```
 
 ---
@@ -315,10 +345,10 @@ A sample header line and the meaning of every term it prints:
 
 ## Flush the font cache
 
-`python3 fixnf.py --install` (and `run.sh --install`) already does this end-to-end. For **any** font (not just this family) that is already in place, the standalone `[register-fonts.py](#the-scripts)` is the generic equivalent of `--install` — one command:
+`python3 fixnf.py --install` (and `run.sh --install`) already does this end-to-end. For **any** font (not just this family) that is already in place, the standalone `[register.py](#the-scripts)` is the generic equivalent of `--install` — one command:
 
 ```bash
-python3 register-fonts.py --input ~/Library/Fonts/MyFont.otf   # a file, or --input a whole dir
+python3 register.py --input ~/Library/Fonts/MyFont.otf   # a file, or --input a whole dir
 ```
 
 Use the manual sequence below when the faces are **already** in `~/Library/Fonts` (edited in place, or copied by hand) and you just need CoreText / `fontd` to notice — on macOS 14+, moving files in/out does **not** reliably refresh the parsed cache.
