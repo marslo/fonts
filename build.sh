@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-09-03 18:40:52
+#   LastChange : 2026-09-04 00:56:02
 #=============================================================================
 
 set -euo pipefail
@@ -33,6 +33,7 @@ declare RECURSIVE_D=false
 declare RECURSIVE_M=false
 declare TITILLIUM_UP=false
 declare LEKTON=false
+declare BLEX=false
 declare ALL=false
 declare ALL_SANS=false
 declare ALL_MONO=false
@@ -68,6 +69,7 @@ OPTIONS
   $(c G)--recursive-mono$(c)        patch for recursive mono font
   $(c G)--titillium-upright$(c)     build Titillium Upright NF: italic + NF + metadata fix. $(c 0Wdi)( src $(c 0Mi)Titillium$(c 0Wdi) -> target $(c 0Mi)Titillium/upright $(c 0Wdi))$(c)
   $(c G)--lekton$(c)                build Lekton NF ( mono ) then dot $(c 0Mi)0$(c) and enlarge $(c 0Mi)•$(c) $(c 0Wdi)( 0 vs o + bigger bullet, via dotzero.py )$(c)
+  $(c G)--blex$(c)                  ligaturize IBM Plex Mono $(c 0Wdi)( Fira Code ligas: IBMPlexMono -> IBMPlexMonoLig -> NF, via Blex/ligaturize.sh )$(c)
 
   $(c G)--dry-run$(c)               show what would be done, but do not execute
   $(c G)-h$(c), $(c G)--help$(c)              show this help message
@@ -352,11 +354,50 @@ function patchLekton() {
   "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -f %q$(c)\n" "${bi}" || rm -f "${bi}"
 }
 
+# build IBM Plex Mono with Fira Code ligatures ( via Blex/ligaturize.sh -> /opt/Ligaturizer ), then Nerd Font patch.
+#   ./Blex/IBMPlexMono --lig--> ./Blex/IBMPlexMonoLig --NF--> ./Blex/IBMPlexMonoLigNF
+function patchBlex() {
+  local ligsh='./Blex/ligaturize.sh'
+  local srcdir='./Blex/IBMPlexMono'
+  local ligdir='./Blex/IBMPlexMonoLig'
+  local nfdir='./Blex/IBMPlexMonoLigNF'
+
+  test -f "${ligsh}" || die "ligaturize.sh not found: ${ligsh}"
+  command -v fontforge >/dev/null 2>&1 || die "fontforge required ( brew install fontforge )"
+
+  # 1. ligaturize IBMPlexMono -> IBMPlexMonoLig ( complex step, delegated to Blex/ligaturize.sh )
+  message "ligaturize ( IBM Plex Mono + Fira Code )" "$(basename "${srcdir}")" "${ligdir}"
+  local -a ligCmd=( bash "${ligsh}" --from "${srcdir}" --to "${ligdir}" )
+  "${DRYRUN}" && ligCmd+=( --dry-run )
+  "${ligCmd[@]}"
+
+  # 2. Nerd Font patch IBMPlexMonoLig -> IBMPlexMonoLigNF ( kept in build.sh )
+  shopt -s nullglob
+  local -a ligFonts=( "${ligdir}"/*.ttf "${ligdir}"/*.otf )
+  shopt -u nullglob
+  test "${#ligFonts[@]}" -eq 0 && return 0
+
+  message "clean + NF patch" "IBMPlexMonoLig" "${nfdir}"
+  # shellcheck disable=SC2015
+  "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -rf %q$(c)\n" "${nfdir}" || rm -rf "${nfdir:?}"
+  "${DRYRUN}" || mkdir -p "${nfdir}"
+
+  for _f in "${ligFonts[@]}"; do
+    for _e in otf ttf; do
+      message "${_e}" "$(basename "${_f}")" "${nfdir}"
+      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${nfdir}" )
+      # shellcheck disable=SC2015
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+    done
+  done
+}
+
 function patchAllMono() {
   patchOperatorMono
   patchMonaco
   patchRecursiveMono
   patchLekton                 # lekton: build NF + dot the '0' + enlarge the bullet '•' (\u2022)
+  patchBlex                   # blex: ligaturize IBM Plex Mono + Nerd Font
 
   # common mono
   while read -r _path; do
@@ -405,6 +446,7 @@ while [[ $# -gt 0 ]]; do
     --recursive-mono        ) RECURSIVE_M=true         ; shift   ;;
     --titillium-upright     ) TITILLIUM_UP=true        ; shift   ;;
     --lekton                ) LEKTON=true              ; shift   ;;
+    --blex                  ) BLEX=true               ; shift   ;;
     --dry-run               ) DRYRUN=true              ; shift   ;;
     -a | --all              ) ALL=true                 ; shift   ;;
     --all-sans              ) ALL_SANS=true            ; shift   ;;
@@ -436,6 +478,7 @@ path="$(sed 's#/*$##' <<< "${path}")"
 "${RECURSIVE_M}"     && patchRecursiveMono
 "${TITILLIUM_UP}"    && patchTitilliumUpright
 "${LEKTON}"          && patchLekton "${PATCHER_OPT[@]}"
+"${BLEX}"            && patchBlex
 
 "${SANS}"            && patchSans "${path}" "${PATCHER_OPT[@]}"
 "${MONO}"            && patchMono "${path}" "${PATCHER_OPT[@]}"

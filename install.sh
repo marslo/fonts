@@ -4,7 +4,7 @@
 #     FileName : install.sh
 #       Author : marslo
 #      Created : 2024-04-16 01:39:12
-#   LastChange : 2026-08-12 02:41:39
+#   LastChange : 2026-09-04 01:27:00
 #=============================================================================
 
 set -euo pipefail
@@ -42,7 +42,7 @@ else
   die "unsupported OS: $(uname)"
 fi
 
-declare -A fontMeta=(
+declare -A FONT_META=(
   [Candara]='sans:normal'
   [Gisha]='sans:normal'
   [Titillium]='sans:normal;sans:otf:upright'
@@ -61,6 +61,7 @@ declare -A fontMeta=(
   [audiolink]='mono:otf'
   [monaspace]='mono:otf'
   [Lekton]='mono:normal'
+  [Blex]='mono:normal:IBMPlexMonoLigNF'
   [agave]='mono:normal'
   [QianLiJiangShan]='cn:otf'
   [LXGW-WenKai]='cn:mono:otf:mono;cn:sans:normal:sans'
@@ -111,8 +112,8 @@ SUPPORTED FONT NAMES:
 function showHelp() {
   # restructuring array list for help message
   local -A fontGroups
-  for name in "${!fontMeta[@]}"; do
-    IFS=';' read -ra groups <<< "${fontMeta[$name]}"
+  for name in "${!FONT_META[@]}"; do
+    IFS=';' read -ra groups <<< "${FONT_META[$name]}"
     for group in "${groups[@]}"; do
       groupType="${group%%:*}"
       [[ -z "${fontGroups[${groupType}]:-}" ]] && fontGroups[${groupType}]="$name" || fontGroups[${groupType}]+=",$name"
@@ -303,18 +304,18 @@ fi
 declare -A fontsToInstall=()
 for t in "${!typeFlag[@]}"; do
   if [[ "${typeFlag[$t]}" == true ]]; then
-    for font in "${!fontMeta[@]}"; do
-      [[ "${fontMeta[$font]}" == *"${t}"* ]] && fontsToInstall["${font}"]=1
+    for font in "${!FONT_META[@]}"; do
+      [[ "${FONT_META[$font]}" == *"${t}"* ]] && fontsToInstall["${font}"]=1
     done
   fi
 done
 for arg in "${paramList[@]}"; do
-  [[ -n "${fontMeta[$arg]:-}" ]] && fontsToInstall["${arg}"]=1
+  [[ -n "${FONT_META[$arg]:-}" ]] && fontsToInstall["${arg}"]=1
 done
 
 if [[ "${#fontsToInstall[@]}" -gt 0 ]]; then
   for font in "${!fontsToInstall[@]}"; do
-    IFS=';' read -ra groups <<< "${fontMeta[$font]}"
+    IFS=';' read -ra groups <<< "${FONT_META[$font]}"
     for group in "${groups[@]}"; do
       result="$(parseFontGroup "${font}" "${group}")"
       IFS='|' read -r srcPattern tag srcDesc <<< "${result}"
