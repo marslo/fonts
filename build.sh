@@ -21,7 +21,6 @@ declare -r ME="bash $(basename "${BASH_SOURCE[0]:-$0}")"
 # shellcheck disable=SC2155
 declare -r SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]:-$0}" )" && pwd )"
 declare -r TU_RUN="${SCRIPT_DIR}/Titillium/upright/scripts/run.sh"   # titillium upright pipeline
-declare -r DOTZERO="${SCRIPT_DIR}/dotzero.py"                        # dotted-zero patch ( 0 vs o )
 
 # for parameters
 declare SANS=false
@@ -68,8 +67,8 @@ OPTIONS
   $(c G)--recursive-desktop$(c)     patch for recursive desktop font
   $(c G)--recursive-mono$(c)        patch for recursive mono font
   $(c G)--titillium-upright$(c)     build Titillium Upright NF: italic + NF + metadata fix. $(c 0Wdi)( src $(c 0Mi)Titillium$(c 0Wdi) -> target $(c 0Mi)Titillium/upright $(c 0Wdi))$(c)
-  $(c G)--lekton$(c)                build Lekton NF ( mono ) then dot $(c 0Mi)0$(c) and enlarge $(c 0Mi)•$(c) $(c 0Wdi)( 0 vs o + bigger bullet, via dotzero.py )$(c)
-  $(c G)--blex$(c)                  ligaturize IBM Plex Mono $(c 0Wdi)( Fira Code ligas: IBMPlexMono -> IBMPlexMonoLig -> NF, via Blex/ligaturize.sh )$(c)
+  $(c G)--lekton$(c)                build Lekton + Fira Code ligatures + NF $(c 0Wdi)( Lekton -> LektonLig -> LektonLigNF, via Lekton/build.sh )$(c)
+  $(c G)--blex$(c)                  ligaturize IBM Plex Mono $(c 0Wdi)( Fira Code ligas: IBMPlexMono -> IBMPlexMonoLig -> NF, via ligaturize.sh )$(c)
 
   $(c G)--dry-run$(c)               show what would be done, but do not execute
   $(c G)-h$(c), $(c G)--help$(c)              show this help message
@@ -316,48 +315,53 @@ function patchTitilliumUpright() {
   "${DRYRUN}" || rm -rf "${work}"
 }
 
-# build Lekton Nerd Font Mono ( via patchMono ), then add a centered dot to '0' and enlarge the tiny bullet '•'(\u2022) in place.
-#   source: Lekton/Lekton-*.ttf -> Lekton/LektonNerdFontMono-*.{otf,ttf} ( 0 dotted, • enlarged )
-# forwards "$@" ( --ext / -- PATCHER_OPT ) to patchMono; honors --dry-run.
+# build the ligaturized Lekton Nerd Font ( no plain NF ):
+#   Lekton/build.sh -> Lekton/LektonLig ( Bold Italic + dotted 0 + big • + ^ grave + Fira Code ligatures )
+#   then font-patcher -> Lekton/LektonLigNF/ ( otf + ttf ) ; honors --dry-run.
 function patchLekton() {
   local path='./Lekton'
-  local bi="${path}/Lekton-BoldItalic.ttf"                       # transient synth source, removed after NF build
-  local bolditalic="${SCRIPT_DIR}/Lekton/bolditalic.py"          # synth Bold Italic ( italic shapes + bold weight )
+  local ligbuild="${SCRIPT_DIR}/Lekton/build.sh"               # Bold Italic + optimized + ligaturize -> LektonLig/
+  local ligdir="${path}/LektonLig"                             # optimized + ligatures ( 4 faces )
+  local nfdir="${path}/LektonLigNF"                            # + Nerd Font glyphs ( otf + ttf )
 
-  test -f "${bolditalic}" || die "bolditalic not found: ${bolditalic}"
-  test -f "${DOTZERO}"    || die "dotzero not found: ${DOTZERO}"
+  test -f "${ligbuild}" || die "Lekton/build.sh not found: ${ligbuild}"
   command -v fontforge >/dev/null 2>&1 || die "fontforge required ( brew install fontforge )"
 
-  # 1. synthesize the missing Bold Italic so patchMono globs it as a fourth source
-  message "bolditalic ( synth Bold Italic )" "$(basename "${path}")" "${path}"
-  local -a biCmd=( fontforge -script "${bolditalic}" --italic "${path}/Lekton-Italic.ttf" --bold "${path}/Lekton-Bold.ttf" -o "${bi}" )
-  # shellcheck disable=SC2015
-  "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${biCmd[@]}")" || "${biCmd[@]}" 2>/dev/null
+  # 1. optimized + ligatures ( delegated to Lekton/build.sh ) -> LektonLig/
+  message "build LektonLig ( Bold Italic + fixes + ligatures )" "$(basename "${path}")" "${ligdir}"
+  local -a ligCmd=( bash "${ligbuild}" )
+  "${DRYRUN}" && ligCmd+=( --dry-run )
+  "${ligCmd[@]}"
 
-  # 2. build NF from all four sources ( incl. the fresh Bold Italic )
-  patchMono "${path}" "$@"
-
-  # 3. dot every freshly-built NerdFont face + enlarge the bullet in place
-  local -a nf=()
+  # 2. Nerd Font patch LektonLig -> LektonLigNF/ ( otf + ttf )
   shopt -s nullglob
-  nf=( "${path}"/*NerdFont*.otf "${path}"/*NerdFont*.ttf )
+  local -a ligFonts=( "${ligdir}"/*.ttf )
   shopt -u nullglob
-  if test "${#nf[@]}" -gt 0; then
-    message "dotzero '0' + '• (U+2022)'" "$(basename "${path}")" "${path}"
-    local -a dotCmd=( fontforge -script "${DOTZERO}" --square -o "${path}" "${nf[@]}" )
-    # shellcheck disable=SC2015
-    "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${dotCmd[@]}")" || "${dotCmd[@]}" 2>/dev/null
-  fi
+  test "${#ligFonts[@]}" -eq 0 && return 0
 
-  # 4. drop the transient Bold Italic source ( the vendor family has no such face )
+  message "clean + NF patch" "LektonLig" "${nfdir}"
   # shellcheck disable=SC2015
-  "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -f %q$(c)\n" "${bi}" || rm -f "${bi}"
+  "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -rf %q$(c)\n" "${nfdir}" || rm -rf "${nfdir:?}"
+  "${DRYRUN}" || mkdir -p "${nfdir}"
+  local _f _e cmd
+  for _f in "${ligFonts[@]}"; do
+    for _e in otf ttf; do
+      message "${_e}" "$(basename "${_f}")" "${nfdir}"
+      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${nfdir}" )
+      # shellcheck disable=SC2015
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+    done
+  done
+
+  # 3. drop the old plain NF ( superseded by LektonLigNF )
+  # shellcheck disable=SC2015
+  "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -f %s$(c)\n" "${path}/LektonNerdFontMono-*.{otf,ttf}" || rm -f "${path}"/LektonNerdFontMono-*.otf "${path}"/LektonNerdFontMono-*.ttf
 }
 
-# build IBM Plex Mono with Fira Code ligatures ( via Blex/ligaturize.sh -> /opt/Ligaturizer ), then Nerd Font patch.
+# build IBM Plex Mono with Fira Code ligatures ( via ligaturize.sh -> /opt/Ligaturizer ), then Nerd Font patch.
 #   ./Blex/IBMPlexMono --lig--> ./Blex/IBMPlexMonoLig --NF--> ./Blex/IBMPlexMonoLigNF
 function patchBlex() {
-  local ligsh='./Blex/ligaturize.sh'
+  local ligsh="${SCRIPT_DIR}/ligaturize.sh"
   local srcdir='./Blex/IBMPlexMono'
   local ligdir='./Blex/IBMPlexMonoLig'
   local nfdir='./Blex/IBMPlexMonoLigNF'
@@ -365,9 +369,9 @@ function patchBlex() {
   test -f "${ligsh}" || die "ligaturize.sh not found: ${ligsh}"
   command -v fontforge >/dev/null 2>&1 || die "fontforge required ( brew install fontforge )"
 
-  # 1. ligaturize IBMPlexMono -> IBMPlexMonoLig ( complex step, delegated to Blex/ligaturize.sh )
+  # 1. ligaturize IBMPlexMono -> IBMPlexMonoLig ( complex step, delegated to ligaturize.sh )
   message "ligaturize ( IBM Plex Mono + Fira Code )" "$(basename "${srcdir}")" "${ligdir}"
-  local -a ligCmd=( bash "${ligsh}" --from "${srcdir}" --to "${ligdir}" )
+  local -a ligCmd=( bash "${ligsh}" --from "${srcdir}" --to "${ligdir}" --name IBMPlexMonoLig )
   "${DRYRUN}" && ligCmd+=( --dry-run )
   "${ligCmd[@]}"
 
@@ -396,7 +400,7 @@ function patchAllMono() {
   patchOperatorMono
   patchMonaco
   patchRecursiveMono
-  patchLekton                 # lekton: build NF + dot the '0' + enlarge the bullet '•' (\u2022)
+  patchLekton                 # lekton: Lekton -> LektonLig ( ligatures ) -> LektonLigNF
   patchBlex                   # blex: ligaturize IBM Plex Mono + Nerd Font
 
   # common mono

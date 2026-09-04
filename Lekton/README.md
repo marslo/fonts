@@ -1,11 +1,17 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 - [features](#features)
-- [synthesized Bold Italic](#synthesized-bold-italic)
-- [glyph tweaks ( dotted `0`, bigger `•` )](#glyph-tweaks--dotted-0-bigger-%E2%80%A2-)
-  - [build ( recommended )](#build--recommended-)
-  - [standalone ( dotzero.py )](#standalone--dotzeropy-)
+- [layout](#layout)
+- [build](#build)
+- [install](#install)
+- [how it works](#how-it-works)
+  - [synthesized Bold Italic](#synthesized-bold-italic)
+  - [glyph tweaks — dotted `0`, bigger `•`, added `^` `` ` ``](#glyph-tweaks--dotted-0-bigger-%E2%80%A2-added-%5E---)
+  - [ligatures](#ligatures)
+- [preview graphics](#preview-graphics)
+- [license & credits](#license--credits)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -13,37 +19,78 @@
 > [!TIP]
 > - [official download](https://fonts.google.com/specimen/Lekton)
 
-![Lekton — original vs Nerd Font ( dotted 0, bigger bullet, + synthesized Bold Italic )](./assets/preview.svg)
+![Lekton — original vs LektonLigNF ( Bold Italic, dotted 0, bigger •, ^ `, Fira Code ligatures )](./assets/preview.svg)
 
+
+Modified [Lekton](https://fonts.google.com/specimen/Lekton) with five fixes plus [Fira Code](https://github.com/tonsky/FiraCode) programming ligatures — part of the `fonts` collection, so one `build.sh` run produces it alongside every other font.
 
 ## features
 
-| # | FEATURE                   | WHY                                                                                                                          | EXAMPLE                                                                                                             |
-| - | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 1 | **Bold Italic**           | Lekton ships Regular / Bold / Italic but no Bold Italic — synthesized from the Italic ( shapes ) + Bold ( weight )           | –                                                                                                                   |
-| 2 | **dotted `0`**            | Lekton's `0` and `o` look nearly identical; a centered dot disambiguates them                                                | <img src="./assets/zero.svg" width="240" alt="original 0 looks like o; the Nerd Font build's 0 has a centered dot"> |
-| 3 | **bigger `•` ( U+2022 )** | Lekton's bullet is a tiny 58-unit square ( ≈5.8% of em ); scaled up to ~200 ( 20% of em ), keeping its original square shape | –                                                                                                                   |
+| # | FEATURE                   | WHY                                                                                                                                             | EXAMPLE                                                                                                             |
+| - | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 1 | **Bold Italic**           | Lekton ships Regular / Bold / Italic but no Bold Italic — synthesized from the Italic ( shapes ) + Bold ( weight )                              | –                                                                                                                   |
+| 2 | **dotted `0`**            | Lekton's `0` and `o` look nearly identical; a centered dot disambiguates them                                                                   | <img src="./assets/zero.svg" width="240" alt="original 0 looks like o; the patched 0 has a centered dot"> |
+| 3 | **bigger `•` ( U+2022 )** | Lekton's bullet is a tiny 58-unit square ( ≈5.8% of em ); scaled up to ~200 ( 20% of em ), keeping its original square shape                    | –                                                                                                                   |
+| 4 | **added `^` `` ` ``**     | Lekton ships without `^` ( asciicircum ) and `` ` `` ( grave ); synthesized from the face's own **â / à** accents so they match Lekton's stroke | –                                                                                                                   |
+| 5 | **ligatures**             | [Fira Code](https://github.com/tonsky/FiraCode) programming ligatures copied in via `calt` ( monospace-safe )                                   | see [below](#ligatures)                                                                                             |
 
-
-## preview graphics
-
-`assets/preview.svg` ( the matrix above ) and `assets/zero.svg` ( in the features table ) are rendered from the built fonts by [`preview.py`](preview.py) — glyph outlines, so GitHub's `<img>` shows them without the font installed. Regenerate after a rebuild ( this repo uses the 2-column `fonts-lekton` layout ):
+## layout
 
 ```bash
-fontforge -script preview.py --preset fonts-lekton
+Lekton-{Regular,Bold,Italic}.ttf
+  └─[ Lekton/build.sh ]─ Bold Italic + dotted 0 + • + ^ ` + Fira Code ligatures ─▶ LektonLig/
+      └─[ font-patcher ]─ + Nerd Font glyphs ─▶ LektonLigNF/
 ```
 
-## synthesized Bold Italic
+| DIR / FILE                                                    | CONTENTS                                                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `Lekton-{Regular,Bold,Italic}.ttf`                            | vendor sources ( untouched )                                                    |
+| [`LektonLig/`](./LektonLig)                                   | 4 desktop faces — Regular / Bold / Italic / **Bold Italic**, all fixes + ligatures |
+| [`LektonLigNF/`](./LektonLigNF)                               | 4 Nerd Font Mono faces ( `otf` + `ttf` ) — LektonLig + NF glyph set             |
+| [`build.sh`](./build.sh)                                      | builds `LektonLig/` ( Bold Italic + fixes + ligatures )                         |
+| `bolditalic.py` · `dotzero.py` · `glyphfix.py` · `preview.py` | the FontForge scripts                                                           |
+
+Lekton declares no OFL Reserved Font Name, so the ligature build keeps the Lekton letterforms as **LektonLig** / **LektonLigNerdFontMono**. There is no plain ( non-ligature ) Nerd Font here — the collection's ligature-free mono role is filled by other families.
+
+## build
+
+```bash
+# from the repo root ( fonts/ ) — build LektonLig/ + LektonLigNF/
+bash build.sh --lekton
+bash build.sh --lekton --dry-run    # preview the commands only
+```
+
+> [!TIP]
+> `--all-mono` / `--all` include Lekton automatically. The intermediate *optimized* faces ( Bold Italic + fixes, pre-ligature ) live in a temp dir; only `LektonLig/` and `LektonLigNF/` are kept.
+
+`build.sh --lekton` runs [`Lekton/build.sh`](./build.sh) ( Bold Italic → dotted 0 → `•` + `^` `` ` `` → ligatures → `LektonLig/` ), then Nerd-Font-patches `LektonLig/` into `LektonLigNF/`.
+
+> [!IMPORTANT]
+> Requires FontForge ( `brew install fontforge` ) and `font-patcher` at `/opt/FontPatcher/font-patcher`. The ligature step uses the repo-root [`ligaturize.sh`](../ligaturize.sh), which clones [Ligaturizer](https://github.com/ToxicFrog/Ligaturizer) to `/opt/Ligaturizer` on first run. `hb-shape` ( `brew install harfbuzz` ) is needed only to regenerate `assets/ligatures.svg`.
+
+## install
+
+- **editor / desktop** → the four faces in [`LektonLig/`](./LektonLig).
+- **terminal / prompt with glyphs** → the four faces in [`LektonLigNF/`](./LektonLigNF) ( use the `ttf` unless your terminal prefers `otf` ).
+
+macOS: double-click a font, or drop the files into `~/Library/Fonts`. Linux: copy into `~/.local/share/fonts` then `fc-cache -f`.
+
+> [!NOTE]
+> Enable **contextual alternates** ( `calt` ) in your editor to see the ligatures — most editors and terminals keep it on by default.
+
+## how it works
+
+Each step below runs on the *optimized* base faces in a temp dir ( inside `Lekton/build.sh` ) before the ligature + Nerd Font passes; advance width is kept throughout ( monospace-safe ) and the vendor `Lekton-*.ttf` are never modified.
+
+### synthesized Bold Italic
 
 > [!NOTE]
 > Lekton ships **Regular / Bold / Italic** but no **Bold Italic**.<br>
-> [`bolditalic.py`](bolditalic.py) fills the gap: italic letterforms + slant come from `Lekton-Italic`, weight is borrowed from `Lekton-Bold` — it emboldens the Italic by the auto-measured `Bold − Italic` stem delta ( ≈ 51 at em=1000, `l` stem 52 → 102 vs Bold 103 ), keeps the `-9.3°` slant and per-glyph advance widths ( monospace-safe ), and stamps the RIBBI Bold+Italic name/style bits.
+> [`bolditalic.py`](bolditalic.py) fills the gap: italic letterforms + slant come from `Lekton-Italic`, weight is borrowed from `Lekton-Bold` — it emboldens the Italic by the auto-measured `Bold − Italic` stem delta ( ≈ 51 at em=1000, `l` stem 52 → 102 vs Bold 103 ), keeps the `-9.3°` slant and per-glyph advance widths, and stamps the RIBBI Bold+Italic name/style bits. Synthetic ( faux ) bold — good enough for a coding font at editor sizes.
 
 ```bash
-# from Lekton/ — writes Lekton-BoldItalic.ttf next to the other sources
-fontforge -script bolditalic.py
-fontforge -script bolditalic.py -n            # preview ( prints the auto amount )
-fontforge -script bolditalic.py -a 55         # override embolden units
+fontforge -script bolditalic.py --italic Lekton-Italic.ttf --bold Lekton-Bold.ttf -o Lekton-BoldItalic.ttf
+fontforge -script bolditalic.py -n            # dry-run ( prints the auto amount )
 ```
 
 | OPTION           | DEFAULT                       | DESCRIPTION                      |
@@ -54,68 +101,51 @@ fontforge -script bolditalic.py -a 55         # override embolden units
 | `-a, --amount N` | auto ( `bold − italic` stem ) | embolden units at em=1000        |
 | `-n, --dry-run`  | —                             | print actions without writing    |
 
-> [!NOTE]
-> This is a **synthetic** ( faux ) bold, not an original designed weight — good enough for a monospace coding font at editor sizes. Once `Lekton-BoldItalic.ttf` exists, `build.sh --lekton` patches it into a NF face automatically ( `patchMono` globs every non-NerdFont source under `Lekton/` ), then dots `0` + enlarges `•` ( U+2022 ).
+### glyph tweaks — dotted `0`, bigger `•`, added `^` `` ` ``
 
-## glyph tweaks ( dotted `0`, bigger `•` )
-
-[`dotzero.py`](../dotzero.py) post-processes the built Nerd Font faces in place — advance width is kept ( monospace-safe ) and the source `Lekton-*.ttf` are never touched.
-
-- **dotted `0`** — Lekton's `0` and `o` look nearly identical; a centered dot is added to `0` so the two are easy to tell apart.
-- **bigger `•`** — Lekton's bullet ( `•`, U+2022 ) is a tiny 58-unit square ( ≈5.8% of em, even smaller than the middot `·` ). `--square` scales the original outline up ( keeping the square shape; default half-size 100 → 200 wide ); `--bullet` instead replaces it with a round dot ( radius 100 → ⌀200 ). Both create the glyph on faces that lack it.
-
-> [!IMPORTANT]
-> Needs FontForge's python. Run via `fontforge -script`, not plain `python3`:
-> ```bash
-> # macOS
-> brew install fontforge
-> # ubuntu
-> sudo apt install fontforge
-> ```
-
-### build ( recommended )
-
-`build.sh --lekton` patches Lekton to Nerd Font Mono, then dots the `0` and enlarges the `•` in place:
+[`dotzero.py`](./dotzero.py) dots the `0`; [`glyphfix.py`](./glyphfix.py) enlarges the `•` and synthesizes the missing `^` / `` ` `` from the top contour of the face's own `â` / `à` accent ( matching Lekton's stroke ). Both create the glyph on faces that lack it, and glyphfix's `^` is also what lets Ligaturizer run ( it aborts on a font without `^` ).
 
 ```bash
-# from the repo root ( fonts/ )
-bash build.sh --lekton              # build NF ( otf + ttf ) + dot 0 + enlarge •
-bash build.sh --lekton --dry-run    # preview the commands only
+fontforge -script dotzero.py  -o OUT path/to/*.ttf                     # dot the 0
+fontforge -script glyphfix.py --square -o OUT path/to/*.ttf            # square • ( default ) + ^ `
+fontforge -script glyphfix.py --bullet   -o OUT path/to/*.ttf          # round • instead
+fontforge -script glyphfix.py --no-ascii -o OUT path/to/*.ttf          # only touch the •
 ```
 
-`--all-mono` / `--all` include this step automatically.
-
-### standalone ( dotzero.py )
-
-```bash
-# dot the 0 on every already-built NerdFont face in place
-fontforge -script dotzero.py -o Lekton Lekton/*NerdFont*.otf
-
-# dot the 0 and enlarge the • as a square ( default half-size 100 = 200 wide = 20% of em )
-fontforge -script dotzero.py --square -o Lekton Lekton/*NerdFont*.otf Lekton/*NerdFont*.ttf
-
-# round dot instead of the square ( mutually exclusive with --square )
-fontforge -script dotzero.py --bullet -o Lekton Lekton/*NerdFont*.otf
-```
-
-| OPTION              | DEFAULT                    | DESCRIPTION                                                                                |
-| ------------------- | -------------------------- | ------------------------------------------------------------------------------------------ |
-| `-o, --out-dir DIR` | `<input-parent>/nf-dotted` | output dir                                                                                 |
-| `-r, --radius N`    | `62`                       | dot radius at em=1000                                                                      |
-| `--bold-radius N`   | `radius + 10`              | dot radius for bold faces ( auto-detected )                                                |
-| `-g, --glyph NAME`  | `zero`                     | glyph to dot                                                                               |
-| `--square [N]`      | off ( `100` when passed )  | enlarge `•` keeping its square shape ( half-size N → `100` = 200 wide = 20% em )           |
-| `--bullet [N]`      | off ( `100` when passed )  | enlarge `•` as a round dot ( radius N → `100` = ⌀200 ); mutually exclusive with `--square` |
-| `--rename SUFFIX`   | —                          | append SUFFIX to family name, e.g. `' Dotted'`, to coexist with the original               |
-| `-n, --dry-run`     | —                          | print actions without writing                                                              |
-
-```bash
-# smaller dot, keep as a separate family so both can be installed
-fontforge -script dotzero.py -r 50 --rename ' Dotted' -o Lekton Lekton/*NerdFont*.otf
-```
-
-- inputs may be files or directories ( scans `*.otf` / `*.ttf` )
-- both radii auto-scale when `em != 1000`; the dot uses `--bold-radius` on bold faces, the bullet keeps one radius across weights
+| SCRIPT / OPTION           | DEFAULT                    | DESCRIPTION                                                                                |
+| ------------------------- | -------------------------- | ------------------------------------------------------------------------------------------ |
+| `dotzero.py -r, --radius` | `62`                       | dot radius at em=1000 ( `--bold-radius` on bold faces )                                     |
+| `dotzero.py -g, --glyph`  | `zero`                     | glyph to dot                                                                               |
+| `glyphfix.py --square [N]`| on ( `100` by default )    | enlarge `•` keeping its square shape ( half-size N → `100` = 200 wide = 20% em )           |
+| `glyphfix.py --bullet [N]`| off ( `100` when passed )  | enlarge `•` as a round dot ( radius N → `100` = ⌀200 ); mutually exclusive with `--square` |
+| `glyphfix.py --no-ascii`  | —                          | skip adding `^` / `` ` ``                                                                   |
+| `-o, --out-dir DIR`       | `<input-parent>-{dotted,glyphfix}` | output dir                                                                        |
+| `--rename SUFFIX`         | —                          | append SUFFIX to the family name                                                           |
+| `-n, --dry-run`           | —                          | print actions without writing                                                              |
 
 > [!WARNING]
-> Re-running on an already-processed face adds a **second** dot to `0` ( it prints a `warn` and proceeds ). Dot from freshly built NF faces, or just use `build.sh --lekton` ( which rebuilds clean faces first ).
+> Re-running `dotzero.py` on an already-dotted face adds a **second** dot to `0` ( it prints a `warn` and proceeds ). `build.sh --lekton` always dots freshly built faces, so this never happens in the normal flow.
+
+### ligatures
+
+The repo-root [`ligaturize.sh`](../ligaturize.sh) wraps [Ligaturizer](https://github.com/ToxicFrog/Ligaturizer): it copies Fira Code's ligature glyphs and its `calt` rules into every optimized face, scale-corrected to Lekton's cell, and renames the family to `LektonLig` ( `--name`, defaulting to the `--to` dir ). `calt` never merges characters — each ligature is drawn as single-cell pieces that `calt` swaps in, so the advance width never changes and the font stays monospace.
+
+![Fira Code ligatures in LektonLig — arrows, comparisons, comments, shaped via calt](./assets/ligatures.svg)
+
+> [!NOTE]
+> **Italic ligatures are upright.** Fira Code has no italic, so every face gets the same upright ligature glyphs — in italic code the letters slant but `->` / `==` stay vertical.
+
+## preview graphics
+
+`assets/preview.svg` ( the matrix above ), `assets/zero.svg` ( in the features table ), and `assets/ligatures.svg` are rendered from the built fonts by [`preview.py`](preview.py) — glyph outlines, so GitHub's `<img>` shows them without the font installed. Ligature samples are shaped with `hb-shape` first ( `calt` applied ). Regenerate after a rebuild ( this repo uses the 2-column `fonts-lekton` layout ):
+
+```bash
+fontforge -script preview.py --preset fonts-lekton
+```
+
+## license & credits
+
+- **Lekton** © Accademia di Belle Arti di Urbino — [SIL Open Font License 1.1](../LICENSE) ( no Reserved Font Name ).
+- Modifications ( Bold Italic, dotted `0`, bigger `•`, added `^` `` ` ``, ligature + Nerd Font patching ) by marslo, released under the same OFL 1.1.
+- Ligatures via [Fira Code](https://github.com/tonsky/FiraCode) ( OFL 1.1 ) · [Ligaturizer](https://github.com/ToxicFrog/Ligaturizer) ( script GPL-3.0, used as an external tool — the fonts it produces are not GPL ).
+- Nerd Font glyphs via [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts).

@@ -2,16 +2,21 @@
 # =============================================================================
 #      FileName : ligaturize.sh
 #        Author : marslo
-#       Created : 2026-09-04 00:15:30
-#    LastChange : 2026-09-04 00:54:38
 # =============================================================================
-# add Fira Code ligatures to IBM Plex Mono via Ligaturizer ( /opt/Ligaturizer ).
+# add Fira Code ligatures to any monospace font via Ligaturizer ( /opt/Ligaturizer ):
 # copies FiraCode's ligature glyphs + calt rules into each face, scale-corrected,
-# and renames the family to 'IBMPlexMonoLig' ( one word, like OperatorMonoLig ).
+# and renames the family to <name> ( one word, like OperatorMonoLig / IBMPlexMonoLig / LektonLig ).
+#
+# <name> defaults to the basename of --to ( --to .../LektonLig -> LektonLig ); pass --name to
+# override — callers pass it explicitly so a later dir rename can't silently change the family.
+#
+# the source faces must already carry '^' ( asciicircum ) — Ligaturizer aborts
+# without it ( Lekton needs Lekton/glyphfix.py first; IBM Plex already ships it ).
 #
 # usage:
-#   bash ligaturize.sh --from <src-dir> --to <dst-dir> [ -n | --dry-run ]
-#   e.g. bash ligaturize.sh --from ./IBMPlexMono --to ./IBMPlexMonoLig
+#   bash ligaturize.sh --from <src-dir> --to <dst-dir> [ --name <family> ] [ -n | --dry-run ]
+#   e.g. bash ligaturize.sh --from ./Blex/IBMPlexMono --to ./Blex/IBMPlexMonoLig
+#        bash ligaturize.sh --from <optimized-dir>    --to ./Lekton/LektonLig
 #
 # override the Ligaturizer location with $LIGATURIZER.
 
@@ -21,13 +26,13 @@ declare -r LIGATURIZER="${LIGATURIZER:-/opt/Ligaturizer}"
 declare -r LIG_URL='https://github.com/ToxicFrog/Ligaturizer.git'
 declare -r LIG_MATCH='ToxicFrog/Ligaturizer'     # remote must contain this
 declare -r LIG_BRANCH='master'
-declare -r NAME='IBMPlexMonoLig'                 # output family name ( no spaces )
 declare FROM=''
 declare TO=''
+declare NAME=''                                  # output family name; default: basename of --to
 declare DRYRUN=false
 
 function die()   { printf 'error: %s\n' "${*}" >&2; exit 1; }
-function usage() { printf 'usage: bash ligaturize.sh --from <src-dir> --to <dst-dir> [ -n | --dry-run ]\n'; exit 0; }
+function usage() { printf 'usage: bash ligaturize.sh --from <src-dir> --to <dst-dir> [ --name <family> ] [ -n | --dry-run ]\n'; exit 0; }
 
 # clone Ligaturizer if missing / not a repo; update it if it's the right repo; die otherwise
 function ensureLigaturizer() {
@@ -55,6 +60,7 @@ while test "${#}" -gt 0; do
   case "${1}" in
     --from         ) FROM="${2}"; shift 2 ;;
     --to           ) TO="${2}";   shift 2 ;;
+    --name         ) NAME="${2}"; shift 2 ;;
     -n | --dry-run ) DRYRUN=true; shift   ;;
     -h | --help    ) usage                ;;
     *              ) die "unknown option: ${1}" ;;
@@ -62,6 +68,7 @@ while test "${#}" -gt 0; do
 done
 
 test -n "${FROM}" && test -n "${TO}" || usage
+NAME="${NAME:-$( basename "${TO}" )}"            # default output family = dest dir name; --name overrides
 command -v git       >/dev/null 2>&1 || die 'git required'
 command -v fontforge >/dev/null 2>&1 || die 'fontforge required ( brew install fontforge )'
 test -d "${FROM}"                    || die "missing source dir: ${FROM}"
@@ -78,11 +85,11 @@ shopt -u nullglob
 test "${#srcs[@]}" -gt 0 || die "no .ttf/.otf found in ${FROM}"
 
 for src in "${srcs[@]}"; do
-  printf '  >> ligaturize %s\n' "$( basename "${src}" )"
+  printf '  >> ligaturize %s -> %s\n' "$( basename "${src}" )" "${NAME}"
   "${DRYRUN}" && continue
   ( cd "${LIGATURIZER}" && fontforge -lang=py -script ligaturize.py "${src}" --output-dir "${TO}" --output-name "${NAME}" --prefix '' ) 2>/dev/null
 done
 
-printf 'done: %d face(s) -> %s\n' "${#srcs[@]}" "${TO}"
+printf 'done: %d face(s) -> %s ( %s )\n' "${#srcs[@]}" "${TO}" "${NAME}"
 
 # vim:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=sh:

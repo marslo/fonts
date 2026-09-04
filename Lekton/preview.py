@@ -2,21 +2,20 @@
 # -*- coding: utf-8 -*-
 
 """
-Render a comparison matrix ( preview.svg ) + a 0-vs-o graphic ( zero.svg )
-straight from the repo's own fonts, so the README graphics stay in sync.
+Render a comparison matrix ( preview.svg ) + a 0-vs-o graphic ( zero.svg ) straight from the repo's own fonts, so the README graphics stay in sync.
 
 Two presets, auto-detected from the directory layout ( override with --preset ):
-  font-lekton    3 columns: original / optimized / NerdFonts  ( repo has those dirs )
-  fonts-lekton   2 columns: original / nerd font              ( fonts next to the script )
+  --preset font-lekton    3 columns: original / optimized / LektonLigNF ( + ligatures.svg )
+  --preset fonts-lekton   2 columns: original / nerd font               ( fonts next to the script )
 
-Sample text is emitted as glyph outlines ( <path> ), not <text> in the font,
-because GitHub loads README SVG via <img> and never applies @font-face.
+Sample text is emitted as glyph outlines ( <path> ), not <text> in the font, because GitHub loads README SVG via <img> and never applies @font-face.
 
 Run with fontforge's python:  fontforge -script preview.py [--preset NAME] [-d out-dir]
 """
 
 import argparse
 import os
+import subprocess
 import sys
 
 try:
@@ -41,20 +40,22 @@ PRESETS = {
     'font-lekton': {
         'base': ROOT,
         'title': 'Lekton, optimized',
-        'subtitle': 'no Bold Italic · 0 looks like o · tiny bullet — the optimized & Nerd Font builds fix all three',
+        'subtitle': 'no Bold Italic · 0 ≈ o · tiny • · no ^ ` — the optimized/NF builds fix all, plus Fira Code ligatures',
         'columns': [ ( 'original', 'original/Lekton-{}.ttf' ),
                      ( 'optimized', 'optimized/Lekton-{}.ttf' ),
-                     ( 'NerdFonts', 'NerdFonts/LektonNerdFontMono-{}.ttf' ) ],
+                     ( 'LektonLigNF', 'LektonLigNF/LektonLigNerdFontMono-{}.ttf' ) ],
         'zero': ( 'original/Lekton-Regular.ttf', 'optimized/Lekton-Regular.ttf' ),
+        'lig': 'LektonLig/LektonLig-Regular.ttf',   # ligature showcase source ( rendered via calt )
     },
     'fonts-lekton': {
         'base': HERE,
         'title': 'Lekton, patched',
-        'subtitle': 'no Bold Italic · 0 ≈ o · tiny bullet — all fixed in the Nerd Font build',
+        'subtitle': 'no Bold Italic · 0 ≈ o · tiny • · no ^ ` — all fixed, plus Fira Code ligatures',
         'columns': [ ( 'original', 'Lekton-{}.ttf' ),
-                     ( 'nerd font', 'LektonNerdFontMono-{}.ttf' ) ],
-        'zero': ( 'Lekton-Regular.ttf', 'LektonNerdFontMono-Regular.ttf' ),
+                     ( 'nerd font', 'LektonLigNF/LektonLigNerdFontMono-{}.ttf' ) ],
+        'zero': ( 'Lekton-Regular.ttf', 'LektonLigNF/LektonLigNerdFontMono-Regular.ttf' ),
         'omit': { ( 'original', 'BoldItalic' ) },   # vendor Lekton ships no Bold Italic
+        'lig': 'LektonLig/LektonLig-Regular.ttf',   # ligature showcase source ( rendered via calt )
     },
 }
 
@@ -232,8 +233,82 @@ def buildZero( preset ):
     return '\n'.join( out )
 
 
+# ── ligature showcase ( calt ) ──
+LIG_SAMPLES = [ '-> => <- <-> ->> =>>',
+                '== === != !== <= >=',
+                ':: := ... |> <| ++',
+                '/* */ // www ;; ^^ `',
+                'x=1 fn() a->b i++ #!/' ]
+LIG_TITLE = 'LektonLig — Lekton + Fira Code ligatures'
+LIG_SUB = 'synthesized ^ ` + Ligaturizer ( rendered via calt, straight from the font )'
+LIG_STYLE = ( '<style>'
+              '.pbg{fill:#21262d;stroke:#ffffff14}'
+              '.cap{fill:#e6edf3;font-size:16px;font-weight:700}'
+              '.cap2{fill:#8b98a5;font-size:12.5px}'
+              '.ink{fill:#cbb994}'
+              '</style>' )
+
+
+def shapeGlyphs( font_path, text ):
+    """ hb-shape a string against the font, returning the shaped glyph names ( ligatures applied ). """
+    # '--' terminates options so a sample starting with '-' is not read as a flag
+    out = subprocess.check_output( [ 'hb-shape', '--no-positions', font_path, '--', text ],
+                                   text=True, stderr=subprocess.DEVNULL ).strip().strip( '[]' )
+    return [ tok.split( '=' )[ 0 ] for tok in out.split( '|' ) ] if out else []
+
+
+def textWidth( s, per_char ):
+    """ Rough pixel width of a proportional label; a little slack ( never clip ) is fine. """
+    return len( s ) * per_char
+
+
+def buildLigatures( preset ):
+    """ A showcase of the Fira Code ligatures in LektonLig, shaped with hb-shape then drawn as outlines. """
+    pad, px, row, head = 26, 30, 54, 74
+    font_path = os.path.join( preset[ 'base' ], preset[ 'lig' ] )
+    total_h = head + len( LIG_SAMPLES ) * row + pad - 10
+    font = fontforge.open( font_path )
+    try:
+        em = font.em or 1000
+        k = px / float( em )
+        # first pass: shape every row, collect its glyph paths and its rendered pixel width
+        rows = []
+        max_row = 0.0
+        for i, sample in enumerate( LIG_SAMPLES ):
+            baseline = head + i * row + row * 0.62
+            penx = 0
+            parts = []
+            for nm in shapeGlyphs( font_path, sample ):
+                if nm not in font:
+                    penx += em // 2
+                    continue
+                glyph = font[ nm ]
+                d = ''.join( quadPath( c ) for c in glyph.foreground )
+                if d:
+                    parts.append( f'<path transform="translate({penx} 0)" d="{d}"/>' )
+                penx += glyph.width
+            rows.append( ( baseline, parts ) )
+            max_row = max( max_row, penx * k )
+        # fit the canvas to the widest of the sample rows / the two labels — no fixed right margin.
+        # per-char factors are calibrated to the rendered widths ( bold-16 title ≈7.9, 12.5 subtitle ≈5.17,
+        # measured against DejaVu — the widest common sans, so narrower viewer fonts never clip )
+        content = max( max_row, textWidth( LIG_TITLE, 8.0 ), textWidth( LIG_SUB, 5.3 ) )
+        width = int( content + 2 * pad )
+        out = [ ( f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {total_h}" '
+                  f'font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">' ), LIG_STYLE,
+                f'<rect class="pbg" x="0.5" y="0.5" width="{width - 1}" height="{total_h - 1}" rx="14"/>',
+                f'<text class="cap" x="{pad}" y="34">{esc( LIG_TITLE )}</text>',
+                f'<text class="cap2" x="{pad}" y="55">{esc( LIG_SUB )}</text>' ]
+        for baseline, parts in rows:
+            out.append( f'<g class="ink" transform="translate({pad} {baseline:.0f}) scale({k:.4f} {-k:.4f})">{"".join( parts )}</g>' )
+        out.append( '</svg>' )
+        return '\n'.join( out )
+    finally:
+        font.close()
+
+
 def main( argv ):
-    p = argparse.ArgumentParser( prog='preview.py', description='render preview.svg + zero.svg from the repo fonts' )
+    p = argparse.ArgumentParser( prog='preview.py', description='render preview.svg + zero.svg ( + ligatures.svg ) from the repo fonts' )
     p.add_argument( '--preset', choices=sorted( PRESETS ), default=None, help='column layout ( default: auto-detect )' )
     p.add_argument( '-d', '--out-dir', default=None, help='output dir ( default: <base>/assets )' )
     args = p.parse_args( argv )
@@ -242,10 +317,17 @@ def main( argv ):
     preset = PRESETS[ name ]
     out_dir = args.out_dir or os.path.join( preset[ 'base' ], 'assets' )
     os.makedirs( out_dir, exist_ok=True )
-    for fname, fn in [ ( 'preview.svg', build ), ( 'zero.svg', buildZero ) ]:
+    jobs = [ ( 'preview.svg', build ), ( 'zero.svg', buildZero ) ]
+    # ligatures.svg only when the preset has a ligature font on disk ( needs hb-shape )
+    lig = preset.get( 'lig' )
+    if lig and os.path.isfile( os.path.join( preset[ 'base' ], lig ) ):
+        jobs.append( ( 'ligatures.svg', buildLigatures ) )
+    for fname, fn in jobs:
         dst = os.path.join( out_dir, fname )
+        # strip per-line trailing whitespace and end with exactly one newline ( pre-commit clean )
+        svg = '\n'.join( line.rstrip() for line in fn( preset ).split( '\n' ) ) + '\n'
         with open( dst, 'w' ) as f:
-            f.write( fn( preset ) )
+            f.write( svg )
         print( f"[{name}] wrote {dst}" )
 
 

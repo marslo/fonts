@@ -2,19 +2,22 @@
 # -*- coding: utf-8 -*-
 
 """
-Add a centered dot to the 'zero' glyph so 0 is distinguishable from o, and optionally enlarge the tiny 'bullet' (•, U+2022) glyph.
+Fix / add Lekton's symbol glyphs ( everything that isn't the '0' — that lives in dotzero.py ):
 
-The bullet can grow two ways ( mutually exclusive ):
-  --square  keep Lekton's original square outline, just scaled up ( default )
-  --bullet  replace it with a round dot
+  •  U+2022  bullet   enlarge Lekton's tiny bullet, keeping its square outline ( or a round dot )
+  ^  U+005E  circumflex  add it when the face lacks one ( Lekton ships without ^ )
+  `  U+0060  grave       add it when the face lacks one ( Lekton ships without ` )
 
-Run with fontforge's python:  fontforge -script dotzero.py [opts] <in.otf|dir>...
+The ^ and ` are synthesized from the face's own diacritic accents ( the top contour of â / à ), so they match Lekton's stroke weight and style. This also makes the font ligaturizable: Ligaturizer aborts on a font missing ^ ( asciicircum ).
+
+Run with fontforge's python:  fontforge -script glyphfix.py [opts] <in.otf|dir>...
 Keeps advance width (monospace-safe); originals are never modified.
 
 USAGE
-    fontforge -script dotzero.py -o Lekton Lekton/*NerdFont*.otf
-    fontforge -script dotzero.py --square -o Lekton Lekton/*NerdFont*.otf Lekton/*NerdFont*.ttf   # == --square 100 ( square )
-    fontforge -script dotzero.py --bullet -o Lekton Lekton/*NerdFont*.otf                          # == --bullet 100 ( round )
+    fontforge -script glyphfix.py -o OUT Lekton/*.ttf                 # == --square 100 + fill ^ `
+    fontforge -script glyphfix.py --square 100 -o OUT Lekton/*.otf    # square bullet, width 200
+    fontforge -script glyphfix.py --bullet 100 -o OUT Lekton/*.otf    # round bullet, diameter 200
+    fontforge -script glyphfix.py --no-ascii -o OUT Lekton/*.ttf      # only touch the bullet
 """
 
 import argparse
@@ -25,18 +28,16 @@ try:
     import fontforge
     import psMat
 except ImportError:
-    sys.exit( "error: run me via 'fontforge -script dotzero.py ...' (needs the fontforge python module)" )
+    sys.exit( "error: run me via 'fontforge -script glyphfix.py ...' (needs the fontforge python module)" )
 
 FONT_EXTS = ( '.otf', '.ttf' )
 KAPPA = 0.5522847498307936        # cubic-bezier circle handle ratio
 
-
-def isBoldFace( font ):
-    """ True when the face reads as bold (name or OS/2 weight). """
-    name = ( font.fontname or '' ).lower()
-    weight = ( font.weight or '' ).lower()
-    heavy = 'bold' in name or 'bold' in weight or 'black' in weight
-    return heavy or ( font.os2_weight or 0 ) >= 600
+# codepoint -> ( glyph name, donor composite ) — the accent is the donor's top contour
+ASCII_FILL = {
+    0x5E: ( 'asciicircum', 'acircumflex' ),   # ^  <- circumflex accent of â
+    0x60: ( 'grave',       'agrave'      ),   # `  <- grave accent of à
+}
 
 
 def circleContour( cx, cy, r, quadratic ):
@@ -51,20 +52,10 @@ def circleContour( cx, cy, r, quadratic ):
     c.cubicTo( ( cx - r, cy - k ), ( cx - k, cy - r ), ( cx, cy - r ) )
     c.cubicTo( ( cx + k, cy - r ), ( cx + r, cy - k ), ( cx + r, cy ) )
     c.closed = True
-    # ttf glyphs are quadratic; a cubic contour added to a quadratic layer is silently dropped, so match the circle to the layer's spline order
+    # ttf glyphs are quadratic; a cubic contour on a quadratic layer is dropped, so match the layer
     if quadratic:
         c.is_quadratic = True
     return c
-
-
-def addDot( glyph, radius ):
-    """ Add a filled circle of the given radius at the glyph bbox center. """
-    x0, y0, x1, y1 = glyph.boundingBox()
-    cx = ( x0 + x1 ) / 2.0
-    cy = ( y0 + y1 ) / 2.0
-    layer = glyph.layers[ 'Fore' ]
-    glyph.layers[ 'Fore' ] += circleContour( cx, cy, radius, layer.is_quadratic )
-    glyph.correctDirection()
 
 
 def setCircle( glyph, radius ):
@@ -143,9 +134,49 @@ def makeSquare( font, half ):
     glyph.correctDirection()
 
 
+def hasGlyph( font, cp ):
+    """ True when the code point maps to a real ( worth-outputting ) glyph. """
+    try:
+        return font[ cp ].isWorthOutputting()
+    except TypeError:
+        return False                          # font[cp] raises TypeError 'No such glyph' for an empty slot
+
+
+def topAccent( glyph ):
+    """ Dup of the glyph's highest contour — the accent sitting above a diacritic composite's base. """
+    best = None
+    besty = None
+    for c in glyph.foreground:
+        ys = [ p.y for p in c ]
+        if not ys:
+            continue
+        lo = min( ys )
+        if besty is None or lo > besty:
+            besty, best = lo, c
+    return best.dup() if best is not None else None
+
+
+def addAscii( font ):
+    """ Add ^ and ` from the face's own circumflex/grave accents when the face lacks them. """
+    added = []
+    for cp, ( name, donor ) in sorted( ASCII_FILL.items() ):
+        if hasGlyph( font, cp ) or donor not in font:
+            continue
+        accent = topAccent( font[ donor ] )
+        if accent is None:
+            continue
+        glyph = font.createChar( cp, name )
+        accent.is_quadratic = glyph.layers[ 'Fore' ].is_quadratic
+        glyph.layers[ 'Fore' ] += accent
+        glyph.width = font[ donor ].width     # monospace advance from the donor
+        glyph.round()
+        glyph.correctDirection()
+        added.append( name )
+    return added
+
+
 def rename( font, suffix ):
     """ Append suffix to family/full/ps names so the font can coexist with the original. """
-    # setting these fields makes generate() rebuild the matching name-table strings
     font.familyname = ( font.familyname or font.fontname ) + suffix
     font.fullname = ( font.fullname or font.fontname ) + suffix
     font.fontname = ( font.fontname or 'Font' ) + suffix.replace( ' ', '' )
@@ -166,28 +197,12 @@ def collectInputs( paths ):
 
 
 def process( path, args ):
-    """ Open one font, dot the zero and/or enlarge the bullet, then generate into the output dir. """
+    """ Open one font, enlarge/create the bullet and fill ^ `, then generate into the output dir. """
     font = fontforge.open( path )
     try:
         scale = ( font.em or 1000 ) / 1000.0
         name = os.path.basename( path )
         notes = []
-
-        # dot the zero ( primary action )
-        if args.glyph in font:
-            base = args.bold_radius if isBoldFace( font ) else args.radius
-            r = base * scale
-            glyph = font[ args.glyph ]
-            before = len( list( glyph.layers[ 'Fore' ] ) )
-            if before > 2:
-                print( f"warn: '{args.glyph}' already has {before} contours in {name} — adding anyway", file=sys.stderr )
-            addDot( glyph, r )
-            after = len( list( glyph.layers[ 'Fore' ] ) )
-            if after != before + 1:
-                sys.exit( f"error: dot was not added to '{args.glyph}' in {name} ( {before} -> {after} contours )" )
-            notes.append( f"{args.glyph} r={r:.0f}" )
-        else:
-            print( f"skip (no '{args.glyph}'): {path}", file=sys.stderr )
 
         # enlarge the bullet, creating it when the face lacks one ( --square or --bullet )
         if args.square_half is not None:
@@ -206,6 +221,12 @@ def process( path, args ):
             else:
                 makeCircle( font, r )
                 notes.append( f"bullet r={r:.0f} (created)" )
+
+        # fill the missing ^ and ` from the face's own accents
+        if not args.no_ascii:
+            got = addAscii( font )
+            if got:
+                notes.append( 'ascii ' + '+'.join( got ) )
 
         if not notes:
             return False
@@ -226,22 +247,21 @@ def process( path, args ):
 
 def parseArgs( argv ):
     p = argparse.ArgumentParser(
-        prog='dotzero.py',
-        description='add a centered dot to the zero glyph (0 vs o)',
+        prog='glyphfix.py',
+        description='enlarge the bullet (•) and add the missing ^ / ` glyphs',
     )
     p.add_argument( 'inputs', nargs='+', help='font files or directories (*.otf, *.ttf)' )
-    p.add_argument( '-o', '--out-dir', help='output dir (default: <first-input-parent>/nf-dotted)' )
-    p.add_argument( '-r', '--radius', type=float, default=62.0, help='dot radius at em=1000 (default 62)' )
-    p.add_argument( '--bold-radius', type=float, help='radius for bold faces (default: radius + 10)' )
-    p.add_argument( '-g', '--glyph', default='zero', help="glyph to modify (default 'zero')" )
+    p.add_argument( '-o', '--out-dir', help='output dir (default: <first-input-parent>/glyphfix)' )
     bullet = p.add_mutually_exclusive_group()
     bullet.add_argument( '--square', dest='square_half', nargs='?', const=100.0, type=float, default=None, metavar='N', help="enlarge the 'bullet' (•, U+2022) keeping its square shape, half-size N at em=1000 (default 100 -> 200 wide)" )
     bullet.add_argument( '--bullet', dest='bullet_radius', nargs='?', const=100.0, type=float, default=None, metavar='N', help="enlarge the 'bullet' (•, U+2022) as a round dot of radius N at em=1000 (default 100 -> diameter 200)" )
-    p.add_argument( '--rename', metavar='SUFFIX', help="append SUFFIX to family name for coexistence, e.g. ' Dotted'" )
+    p.add_argument( '--no-ascii', action='store_true', help='do not add the missing ^ / ` glyphs' )
+    p.add_argument( '--rename', metavar='SUFFIX', help="append SUFFIX to family name for coexistence, e.g. ' Fixed'" )
     p.add_argument( '-n', '--dry-run', action='store_true', help='report actions without writing files' )
     args = p.parse_args( argv )
-    if args.bold_radius is None:
-        args.bold_radius = args.radius + 10.0
+    # default action when neither bullet mode is given: square 100
+    if args.square_half is None and args.bullet_radius is None:
+        args.square_half = 100.0
     return args
 
 
@@ -255,7 +275,7 @@ def main( argv ):
         first = args.inputs[ 0 ]
         parent = first if os.path.isdir( first ) else os.path.dirname( os.path.abspath( first ) )
         args.out_dir = os.path.join( os.path.dirname( parent.rstrip( '/' ) ) or '.',
-                                     os.path.basename( parent.rstrip( '/' ) ) + '-dotted' )
+                                     os.path.basename( parent.rstrip( '/' ) ) + '-glyphfix' )
     if not args.dry_run:
         os.makedirs( args.out_dir, exist_ok=True )
 

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 694 418" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
 <style>.pbg{fill:#21262d;stroke:#ffffff14}.cap{fill:#e6edf3;font-size:16px;font-weight:700}.cap2{fill:#8b98a5;font-size:12.5px}.col{fill:#e6edf3;font-size:13.5px;font-weight:700}.lbl{fill:#8b98a5;font-size:13.5px}.ink{fill:#cbb994}.dash{fill:#5b636c;font-size:20px}.rule{stroke:#ffffff12}.vrule{stroke:#ffffff0d}.tag{fill:#e6edf3;font-size:12px;font-weight:700}.sub{fill:#8b98a5;font-size:10.5px}</style>
 <text class="cap" x="20" y="36">Lekton, patched</text>
-<text class="cap2" x="20" y="56">no Bold Italic · 0 ≈ o · tiny bullet — all fixed in the Nerd Font build</text>
+<text class="cap2" x="20" y="56">no Bold Italic · 0 ≈ o · tiny • · no ^ ` — all fixed, plus Fira Code ligatures</text>
 <rect class="pbg" x="20" y="66" width="654" height="332" rx="14"/>
 <text class="col" x="281" y="108" text-anchor="middle">original</text>
 <text class="col" x="531" y="108" text-anchor="middle">nerd font</text>
