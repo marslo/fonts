@@ -16,18 +16,17 @@ The role (roman vs italic) is carried by the build subfolder and read back by
 fixnf.py, so no italic detection from (possibly dirty) metadata is ever needed.
 
 Usage:
-    ./prep.py --src DIR [--src DIR ...] --build DIR [--dry-run]
+    python3 prep.py --src DIR [--src DIR ...] --build DIR [--dry-run]
 
 --src is repeatable; each weight's Upright/Italic face is looked up across the
 given dirs in order (first match wins).
 """
 import os
-import sys
-import glob
 import shutil
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from guillemet import fix as fix_guillemet   # reusable double-chevron transplant
+from guillemet import fix as fix_guillemet  # reusable double-chevron transplant
 
 WEIGHTS = ["Thin", "Light", "Regular", "Semibold", "Bold"]
 

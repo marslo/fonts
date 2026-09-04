@@ -10,7 +10,7 @@ agree with it -- so one glance confirms the compile/fix produced correct upright
 and italic faces.
 
 Usage:
-    ./verify.py [--input FILE|DIR] [--strict] [--coretext] [--family NAME]
+    python3 verify.py [--input FILE|DIR] [--strict] [--coretext] [--family NAME]
       # default --input = <script dir>/out/fonts
       # --strict   exit non-zero if any face fails
       # --coretext read faces' CoreText traits (macOS). given alone it reads the
@@ -20,13 +20,14 @@ Usage:
       # --family   family name for the bare --coretext system-cache query
       #            (default "Titillium Nerd Font Upright"); ignored when --input is given.
 """
-import os
-import sys
 import glob
+import os
 import subprocess
+import sys
 import tempfile
-from fontTools.ttLib import TTFont
+
 from fontTools.pens.recordingPen import RecordingPen
+from fontTools.ttLib import TTFont
 
 FAMILY = "Titillium Nerd Font Upright"
 RIBBI = {"Regular", "Bold"}
@@ -93,8 +94,8 @@ def expected(weight, italic):
     ps_style = (("" if weight == "Regular" else weight)
                 + ("Italic" if italic else ("Regular" if weight == "Regular" else ""))) or "Regular"
     n6 = f"TitilliumNF-Upright{ps_style}"
-    return dict(macStyle=ms, fs_style=fs_style, angle=angle,
-                n1=n1, n2=n2, n4=n4, n6=n6, n16=FAMILY, n17=typo_sub)
+    return {"macStyle": ms, "fs_style": fs_style, "angle": angle,
+            "n1": n1, "n2": n2, "n4": n4, "n6": n6, "n16": FAMILY, "n17": typo_sub}
 
 
 def contour_count(gs, gname):
@@ -162,8 +163,8 @@ def check_face(path):
     checks.append(("guillemets « »", " ".join(f"{s}={n}c" for s, _, n in guil), "both 2c", guil_ok))
 
     passed = all(ok for *_, ok in checks)
-    info = dict(wc=wc, weight=weight, italic=italic, upm=upm,
-                total=total, uni=uni, base_uni=base_uni, pua=pua)
+    info = {"wc": wc, "weight": weight, "italic": italic, "upm": upm,
+            "total": total, "uni": uni, "base_uni": base_uni, "pua": pua}
     return base, passed, checks, info
 
 
@@ -311,7 +312,7 @@ def main():
                 f"(base={info['base_uni']}, PUA/NF={info['pua']}){RST}")
         print(f"{'●' if passed else '✗'} {head}")
         for label, actual, want, ok in checks:
-            line = f"    {label:22s}: {str(actual)}"
+            line = f"    {label:22s}: {actual!s}"
             if not ok:
                 line += f"   {RED}!= expected {want}{RST}"
             print(f"{mark(ok):>14}  {line}" if not ok else f"    {DIM}{mark(ok)}{RST} {line}")

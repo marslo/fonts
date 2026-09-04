@@ -17,16 +17,17 @@ CFF/OTF targets are handled.
 
 Importable: prep.py calls `fix()` directly. Standalone:
 
-    ./guillemet.py [DIR|FILE ...] [--root=DONOR_DIR] [--donor=FILE] [--force] [--dry-run]
+    python3 guillemet.py [DIR|FILE ...] [--root=DONOR_DIR] [--donor=FILE] [--force] [--dry-run]
       # default target DIR=. ; default donor --root=. (the normal Titillium faces)
 """
+import glob
 import os
 import sys
-import glob
-from fontTools.ttLib import TTFont
+
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.pens.transformPen import TransformPen
+from fontTools.ttLib import TTFont
 
 GUILLEMETS = (0x00AB, 0x00BB)   # « »
 WCLASS = {250: "Thin", 300: "Light", 400: "Regular", 600: "Semibold", 700: "Bold"}
@@ -109,9 +110,8 @@ def iter_targets(args):
     for a in (args or ["."]):
         p = os.path.expanduser(a)
         if os.path.isdir(p):
-            for f in sorted(glob.glob(os.path.join(p, "*.otf")) +
-                            glob.glob(os.path.join(p, "*.ttf"))):
-                yield f
+            yield from sorted(glob.glob(os.path.join(p, "*.otf")) +
+                              glob.glob(os.path.join(p, "*.ttf")))
         elif os.path.isfile(p):
             yield p
         else:

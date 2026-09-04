@@ -15,13 +15,14 @@ ItalicAngle = -13 can no longer fool anything). Weight still comes from
 usWeightClass. Output is written under canonical filenames into --out.
 
 Usage:
-    ./fixnf.py --roman DIR --italic DIR --out DIR [--install] [--dry-run]
+    python3 fixnf.py --roman DIR --italic DIR --out DIR [--install] [--dry-run]
 """
-import os
-import sys
 import glob
+import os
 import subprocess
+import sys
 import tempfile
+
 from fontTools.ttLib import TTFont
 
 FAMILY = "Titillium Nerd Font Upright"
