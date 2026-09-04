@@ -1,0 +1,270 @@
+<title>Blex Ligature Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fira+Code:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f6f4ef; --surface:#fffefb; --surface-2:#efece3; --code-bg:#faf8f2;
+    --border:#e4dfd2; --hair:#efe9dc;
+    --ink:#221e16; --muted:#6f6858; --faint:#9c9484;
+    --accent:#9a6a12; --accent-ink:#7e560c; --accent-soft:#f2e6cc;
+    --good:#3d7a37; --warn:#9a5a1f; --warn-soft:#f4e6d2;
+    --shadow:0 1px 2px rgba(40,30,10,.05), 0 8px 24px -12px rgba(60,45,15,.16);
+    color-scheme:light;
+  }
+  :root:not([data-theme="light"]){ }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#16140f; --surface:#201d17; --surface-2:#28241c; --code-bg:#1b1813;
+      --border:#332d22; --hair:#2a251d;
+      --ink:#ece6d7; --muted:#a89e8b; --faint:#7b7362;
+      --accent:#d8b26a; --accent-ink:#e6c987; --accent-soft:#2d2616;
+      --good:#82b972; --warn:#d9a869; --warn-soft:#2e2414;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.6);
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16140f; --surface:#201d17; --surface-2:#28241c; --code-bg:#1b1813;
+    --border:#332d22; --hair:#2a251d;
+    --ink:#ece6d7; --muted:#a89e8b; --faint:#7b7362;
+    --accent:#d8b26a; --accent-ink:#e6c987; --accent-soft:#2d2616;
+    --good:#82b972; --warn:#d9a869; --warn-soft:#2e2414;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:85vw; margin:0 auto; padding:0 24px}
+  code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+  .fc{font-family:"Fira Code","IBM Plex Mono",monospace; font-feature-settings:"calt" 1,"liga" 1}
+
+  a{color:var(--accent-ink); text-underline-offset:2px; text-decoration-thickness:1px}
+  h1,h2,h3{text-wrap:balance; line-height:1.2; margin:0}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:500;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--accent-ink)}
+
+  /* ── hero ── */
+  header{padding:72px 0 40px; border-bottom:1px solid var(--border)}
+  h1{font-size:clamp(34px,6vw,52px); font-weight:700; letter-spacing:-.02em; margin:14px 0 0}
+  .lede{font-size:19px; color:var(--muted); margin:18px 0 0; max-width:60ch}
+  .demo{margin-top:34px; background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; box-shadow:var(--shadow); padding:22px 24px; overflow-x:auto}
+  .demo-row{font-family:"Fira Code",monospace; font-feature-settings:"calt" 1,"liga" 1;
+    font-size:30px; font-weight:500; color:var(--ink); white-space:nowrap; letter-spacing:.02em}
+  .demo-cap{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--faint);
+    margin-top:14px; letter-spacing:.02em}
+  .demo-cap b{color:var(--accent-ink); font-weight:600}
+
+  /* ── pipeline ── */
+  .pipe{display:flex; align-items:stretch; gap:0; margin:36px 0 8px; flex-wrap:wrap}
+  .stage{flex:1 1 200px; background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:16px 18px; box-shadow:var(--shadow)}
+  .stage .dir{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:15px; color:var(--ink)}
+  .stage .role{font-size:13px; color:var(--muted); margin-top:3px}
+  .stage .tool{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--accent-ink);
+    margin-top:10px; letter-spacing:.02em}
+  .arrow{flex:0 0 42px; display:grid; place-items:center; color:var(--faint); font-size:22px}
+  @media (max-width:640px){ .arrow{flex-basis:100%; transform:rotate(90deg); height:28px} }
+
+  section{padding:46px 0; border-bottom:1px solid var(--hair)}
+  section:last-of-type{border-bottom:0}
+  h2{font-size:26px; font-weight:600; letter-spacing:-.01em}
+  h2 .n{font-family:"IBM Plex Mono",monospace; color:var(--accent); font-weight:500; margin-right:.5em}
+  section > p{max-width:66ch}
+  p{margin:14px 0}
+
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px; overflow-x:auto; margin:18px 0; font-size:13.5px; line-height:1.7}
+  pre code{color:var(--ink)}
+  .cmt{color:var(--faint)}
+  .flag{color:var(--accent-ink)}
+  p code,li code,td code{background:var(--surface-2); border:1px solid var(--hair);
+    border-radius:5px; padding:.08em .38em; font-size:.86em}
+
+  table{width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--hair); vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted); font-weight:500}
+  td:first-child{white-space:nowrap}
+
+  .steps{list-style:none; margin:0; padding:0; counter-reset:step}
+  .steps > li{position:relative; padding:4px 0 26px 52px; counter-increment:step}
+  .steps > li::before{content:counter(step,decimal-leading-zero); position:absolute; left:0; top:2px;
+    font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:600; color:var(--accent);
+    background:var(--accent-soft); border-radius:8px; width:36px; height:30px; display:grid; place-items:center}
+  .steps h3{font-size:18px; font-weight:600}
+  .steps p{margin:6px 0 0; color:var(--muted); font-size:15px}
+
+  .note{border:1px solid var(--border); border-left:3px solid var(--accent); background:var(--surface);
+    border-radius:0 10px 10px 0; padding:14px 18px; margin:20px 0; font-size:14.5px}
+  .note.warn{border-left-color:var(--warn); background:var(--warn-soft)}
+  .note .lbl{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; font-weight:600; color:var(--accent-ink)}
+  .note.warn .lbl{color:var(--warn)}
+  .note p{margin:5px 0 0; color:var(--ink)}
+
+  .mech{display:grid; grid-template-columns:1fr; gap:10px; margin:20px 0}
+  .mech .row{display:flex; gap:14px; align-items:baseline; padding:11px 16px; background:var(--surface);
+    border:1px solid var(--border); border-radius:10px; flex-wrap:wrap}
+  .mech .in{font-family:"Fira Code",monospace; font-feature-settings:"calt" 0; font-size:20px;
+    color:var(--ink); min-width:64px; font-weight:500}
+  .mech .to{color:var(--faint)}
+  .mech .out{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--accent-ink)}
+
+  .verify{background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:8px 20px; box-shadow:var(--shadow); margin:18px 0}
+  .verify .kv{display:flex; justify-content:space-between; gap:16px; align-items:center;
+    padding:12px 0; border-bottom:1px solid var(--hair)}
+  .verify .kv:last-child{border-bottom:0}
+  .verify .k{font-size:14.5px; color:var(--muted)}
+  .verify .v{font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:600; color:var(--ink);
+    font-variant-numeric:tabular-nums}
+  .chk{color:var(--good); font-weight:700}
+
+  footer{padding:40px 0 72px; color:var(--muted); font-size:14px}
+  footer .links{display:flex; gap:20px; flex-wrap:wrap; margin-top:12px; font-family:"IBM Plex Mono",monospace; font-size:13px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Font build runbook</div>
+    <h1>Blex Ligature Runbook</h1>
+    <p class="lede">Add Fira&nbsp;Code programming ligatures to <b>IBM&nbsp;Plex&nbsp;Mono</b>, then patch in the Nerd&nbsp;Font glyph set — a reproducible three-stage build.</p>
+
+    <div class="demo">
+      <div class="demo-row fc">-&gt;&nbsp;&nbsp;=&gt;&nbsp;&nbsp;!=&nbsp;&nbsp;==&nbsp;&nbsp;===&nbsp;&nbsp;&lt;=&nbsp;&nbsp;&gt;=&nbsp;&nbsp;&lt;-&nbsp;&nbsp;|&gt;&nbsp;&nbsp;::&nbsp;&nbsp;&lt;&gt;&nbsp;&nbsp;/*&nbsp;*/&nbsp;&nbsp;www</div>
+      <div class="demo-cap">rendered live in <b>Fira&nbsp;Code</b> — the ligatures this runbook copies into IBM&nbsp;Plex&nbsp;Mono</div>
+    </div>
+
+    <div class="pipe">
+      <div class="stage">
+        <div class="dir">IBMPlexMono/</div>
+        <div class="role">vendor OTF · 16 faces + Book(350)</div>
+        <div class="tool">— original —</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="dir">IBMPlexMonoLig/</div>
+        <div class="role">+ Fira Code ligatures + <code>calt</code></div>
+        <div class="tool">Ligaturizer</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="dir">IBMPlexMonoLigNF/</div>
+        <div class="role">+ Nerd Font glyph set</div>
+        <div class="tool">font-patcher</div>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2>What you need</h2>
+    <p>Two tools do the work; a third repo carries the ligature glyphs. The ligature and Nerd&nbsp;Font stages run through FontForge's python; the one-time Book&nbsp;(350) step uses plain <code>python3</code> (fontTools) plus FontForge to flatten glyf→CFF.</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Used for</th><th>Install</th></tr></thead>
+      <tbody>
+        <tr><td>FontForge</td><td>runs every script</td><td><code>brew install fontforge</code> · <code>apt install fontforge python3-fontforge</code></td></tr>
+        <tr><td>Ligaturizer</td><td>the ligatures + Fira Code</td><td><code>git clone --recurse-submodules …/ToxicFrog/Ligaturizer</code></td></tr>
+        <tr><td>font-patcher</td><td>the Nerd Font step</td><td>Nerd Fonts release → <code>FontPatcher.zip</code></td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <div class="lbl">Why Ligaturizer</div>
+      <p>IBM&nbsp;Plex&nbsp;Mono ships no ligatures. Ligaturizer copies Fira&nbsp;Code's ligature glyphs and its <code>calt</code> rules into any monospace font, scale-corrected — so the shapes are Fira&nbsp;Code's, sized to Plex's cell. Both are geometric sans, so they sit together well.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The build</h2>
+    <ol class="steps">
+      <li>
+        <h3>Lay out the sources</h3>
+        <p>Drop the 16 vendor faces (CFF <code>.otf</code>, copied verbatim from <code>@ibm/plex-mono@2.5.0</code>) into a folder the build reads from.</p>
+        <pre><code>Blex/
+├── IBMPlexMono/        <span class="cmt"># vendor sources — IBMPlexMono-{Regular,Bold,Italic,…}.otf ( CFF )</span>
+├── IBMPlexMonoVar/     <span class="cmt"># stage 0 inputs — IBM Plex Mono variable fonts ( wght axis )</span>
+├── IBMPlexMonoLig/     <span class="cmt"># stage 2 output ( ligaturized )</span>
+└── IBMPlexMonoLigNF/   <span class="cmt"># stage 3 output ( Nerd Font )</span></code></pre>
+      </li>
+      <li>
+        <h3>Synthesize the Book (350) weight</h3>
+        <p>IBM&nbsp;Plex&nbsp;Mono has no 350 — Light&nbsp;(300) reads a touch thin, Regular&nbsp;(400) a touch heavy. Instance one from the <b>variable font</b> at <code>wght=350</code> (no glyph editing — the font's own deltas), then flatten glyf→CFF so it matches the OTF vendor set. Run once; the faces are committed.</p>
+        <pre><code>bash Blex/blex-book.sh    <span class="cmt"># → IBMPlexMono/IBMPlexMono-Book{,Italic}.otf</span></code></pre>
+      </li>
+      <li>
+        <h3>Ligaturize — Plex + Fira Code</h3>
+        <p>Run from the Ligaturizer repo (it resolves its bundled Fira Code by a relative path). Name the family in one word, like <code>OperatorMonoLig</code>.</p>
+        <pre><code>cd /opt/Ligaturizer
+fontforge -lang=py -script ligaturize.py \
+  Blex/IBMPlexMono/IBMPlexMono-Regular.otf \
+  <span class="flag">--output-dir</span> Blex/IBMPlexMonoLig \
+  <span class="flag">--output-name</span> 'IBMPlexMonoLig' <span class="flag">--prefix</span> ''    <span class="cmt"># → IBMPlexMonoLig-Regular.otf ( CFF in → CFF out )</span></code></pre>
+        <p>Looping every weight is enough boilerplate to live in its own script, <code>Blex/ligaturize.sh</code>:</p>
+        <pre><code>bash Blex/ligaturize.sh <span class="flag">--from</span> ./Blex/IBMPlexMono <span class="flag">--to</span> ./Blex/IBMPlexMonoLig</code></pre>
+      </li>
+      <li>
+        <h3>Nerd Font patch</h3>
+        <p>Patch each ligaturized face. font-patcher keeps the <code>calt</code> table intact and layers the Nerd Font glyphs on top.</p>
+        <pre><code>font-patcher Blex/IBMPlexMonoLig/IBMPlexMonoLig-Regular.otf \
+  --mono --complete --careful --quiet --no-progressbars \
+  -ext otf -out Blex/IBMPlexMonoLigNF</code></pre>
+      </li>
+      <li>
+        <h3>Or wire it into one command</h3>
+        <p>Stage&nbsp;2 goes in <code>ligaturize.sh</code>; stage&nbsp;3 (the Nerd Font loop) stays in <code>build.sh</code> as <code>patchBlex</code>. Then the whole build is:</p>
+        <pre><code>bash build.sh <span class="flag">--blex</span>    <span class="cmt"># ligaturize → NF, all 18 faces ( otf-only )</span></code></pre>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>How the ligatures work</h2>
+    <p>There is only one OpenType feature at play: <code>calt</code> (contextual alternates) — the switch editors label “font ligatures”. It never merges characters into one wide glyph; instead each ligature is <b>drawn as single-cell pieces</b>, and <code>calt</code> swaps the typed characters for those pieces. The advance width never changes, so the font stays monospace.</p>
+    <div class="mech">
+      <div class="row"><span class="in">-&gt;</span><span class="to">→ substitutes to</span><span class="out">CR.35.0 &nbsp;lig.35</span></div>
+      <div class="row"><span class="in">!=</span><span class="to">→ substitutes to</span><span class="out">CR.27.0 &nbsp;lig.27</span></div>
+      <div class="row"><span class="in">===</span><span class="to">→ substitutes to</span><span class="out">CR.85.0 &nbsp;CR.85.1 &nbsp;lig.85</span></div>
+    </div>
+    <p>A two-cell ligature is two pieces (<code>CR.n.0</code> + <code>lig.n</code>); a three-cell one is three. Ligaturizer copies 136 such ligatures and the contextual rules that fire them — verbatim from Fira&nbsp;Code, scaled to the target.</p>
+  </section>
+
+  <section>
+    <h2>Naming &amp; license</h2>
+    <p>IBM&nbsp;Plex is under the SIL Open Font License 1.1 and declares a <b>Reserved Font Name: “Plex”</b>. A modified font may not use that name — which is exactly why the community build is called <em>Blex</em>.</p>
+    <div class="note warn">
+      <div class="lbl">font-patcher handles this for you</div>
+      <p>Nerd Fonts' font-patcher already renames <code>IBM Plex</code> → <code>Blex</code> on output. So <code>IBMPlexMonoLig-Regular.otf</code> becomes <code>BlexMonoLigNerdFontMono-Regular.otf</code> — RFN-safe automatically. Keep the intermediate <code>IBMPlexMonoLig/</code> local; ship the <code>Blex…</code> Nerd Font faces.</p>
+    </div>
+    <p>The output is OFL either way (IBM&nbsp;Plex OFL + Fira&nbsp;Code OFL). Note that Ligaturizer's <em>script</em> is GPL-3.0 — use it as an external tool; the fonts it produces are not GPL.</p>
+  </section>
+
+  <section>
+    <h2>Verify</h2>
+    <p>Shape a string with HarfBuzz — if <code>-&gt;</code> comes back as ligature pieces, <code>calt</code> survived the Nerd Font patch.</p>
+    <pre><code>hb-shape --no-positions BlexMonoLigNerdFontMono-Regular.otf 'a -&gt; b'
+<span class="cmt"># [a | space | CR.35.0 | lig.35 | space | b]   ← -&gt; ligated ✓</span></code></pre>
+    <div class="verify">
+      <div class="kv"><span class="k">Ligatures preserved after NF patch</span><span class="v">136 <span class="mono">calt</span> lookups <span class="chk">✓</span></span></div>
+      <div class="kv"><span class="k">Nerd Font glyphs added</span><span class="v">10,507 <span class="chk">✓</span></span></div>
+      <div class="kv"><span class="k">Advance width (still monospace)</span><span class="v">unchanged <span class="chk">✓</span></span></div>
+      <div class="kv"><span class="k">Family renamed for RFN</span><span class="v">BlexMonoLig <span class="chk">✓</span></span></div>
+    </div>
+  </section>
+
+  <footer>
+    <div>Blex = IBM&nbsp;Plex&nbsp;Mono + Fira&nbsp;Code ligatures + Nerd&nbsp;Font. Reproducible via <code>build.sh --blex</code>.</div>
+    <div class="links">
+      <a href="https://github.com/ToxicFrog/Ligaturizer">Ligaturizer</a>
+      <a href="https://github.com/tonsky/FiraCode">Fira Code</a>
+      <a href="https://github.com/ryanoasis/nerd-fonts">Nerd Fonts</a>
+      <a href="https://github.com/IBM/plex">IBM Plex</a>
+    </div>
+  </footer>
+</div>

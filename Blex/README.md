@@ -12,22 +12,25 @@
 ## pipeline
 
 ```bash
-IBMPlexMonoVar/ ─[ mkbook.sh: instance wght=350 ]─┐   Book + Book Italic   ( run once )
-                                                   ▼
-IBMPlexMono/  ──[ ligaturize.sh → Ligaturizer ]──▶  IBMPlexMonoLig/  ──[ font-patcher ]──▶  IBMPlexMonoLigNF/
+IBMPlexMonoVar/ ──[ blex-book.sh: instance wght=350 ]─┐  Book + Book Italic   ( run once )
+                                                      ▼
+IBMPlexMono/    ──[ ligaturize.sh → Ligaturizer ]──▶  IBMPlexMonoLig/  ──[ font-patcher ]──▶  IBMPlexMonoLigNF/
 # vendor (+ Book, Book Italic)   + Fira Code + calt      ligatures              + Nerd Font glyphs
 ```
 
 ```bash
 Blex/
-├── IBMPlexMono/        # vendor sources — IBMPlexMono-{Regular,Bold,Italic,…}.ttf ( + instanced IBMPlexMono-Book{,Italic}.ttf )
+├── IBMPlexMono/        # vendor sources ( verbatim copy ) — IBMPlexMono-*.otf ( CFF ) ( + instanced IBMPlexMono-Book{,Italic}.otf )
 ├── IBMPlexMonoVar/     # stage 0 inputs — IBM Plex Mono variable fonts ( wght axis ), used only to instance Book
 ├── IBMPlexMonoLig/     # stage 2 — Fira Code ligatures added ( family: IBMPlexMonoLig )
 ├── IBMPlexMonoLigNF/   # stage 3 — NF patched; files are BlexMonoLigNerdFontMono-* ( font-patcher renames Plex→Blex, see below )
-├── mkbook.sh           # stage 0 — instance the Book ( 350 ) weight from the variable fonts ( run once )
+├── blex-book.sh           # stage 0 — instance the Book ( 350 ) weight from the variable fonts ( run once )
 ├── ligaturize.sh       # stage 2 driver ( wraps /opt/Ligaturizer )
 └── preview.py          # renders assets/ligatures.svg
 ```
+
+> [!NOTE]
+> `IBMPlexMono/` is a verbatim copy of the `complete/otf/` fonts from [`@ibm/plex-mono@2.5.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-mono%402.5.0) ( released 2026-06-11 ); `IBMPlexMonoVar/` are the matching variable fonts from the same release. Nothing here is hand-edited — to update, re-copy from a newer release, then re-run `blex-book.sh`.
 
 ## weights
 
@@ -36,27 +39,28 @@ Blex/
 | Thin       |           100 | vendor                                                      |
 | ExtraLight |           200 | vendor                                                      |
 | Light      |           300 | vendor                                                      |
-| **Book**   |       **350** | **instanced — `mkbook.sh` @ wght=350 ( upright + Italic )** |
+| **Book**   |       **350** | **instanced — `blex-book.sh` @ wght=350 ( upright + Italic )** |
 | Regular    |           400 | vendor                                                      |
+| Text       |           450 | vendor                                                      |
 | Medium     |           500 | vendor                                                      |
 | SemiBold   |           600 | vendor                                                      |
 | Bold       |           700 | vendor                                                      |
 
-Book ships both `Book` and `Book Italic`, matching the vendor faces.
+Book ships both `Book` and `Book Italic`, matching the vendor faces. Vendor faces are CFF/OpenType ( `.otf` ); Book is instanced ( glyf ) then converted to CFF, so the whole set stays OTF. ( `Text` 450 is IBM's own in-between weight, distinct from Book 350. )
 
 > [!NOTE]
 > Light ( 300 ) is a touch thin and Regular ( 400 ) a touch heavy — **Book ( 350 )** sits exactly between them. It is instanced from IBM Plex Mono's official **variable font** at `wght=350` ( no glyph editing — the font's own deltas interpolate a true 350 ), then flattened to a static face any terminal/editor can select. Its stem measures 60 units, exactly between Light ( 50 ) and Regular ( 70 ).
 
 ### regenerate Book ( only when IBM Plex Mono is updated )
 
-`IBMPlexMono-Book.ttf` and `IBMPlexMono-BookItalic.ttf` are committed, so a normal checkout needs nothing. Re-run only after a vendor refresh:
+`IBMPlexMono-Book.otf` and `IBMPlexMono-BookItalic.otf` are committed, so a normal checkout needs nothing. Re-run only after a vendor refresh:
 
 ```bash
-bash Blex/mkbook.sh                 # instance wght=350 -> IBMPlexMono/IBMPlexMono-Book{,Italic}.ttf
-bash Blex/mkbook.sh --weight 340    # a touch lighter
+bash Blex/blex-book.sh                 # instance wght=350 -> IBMPlexMono/IBMPlexMono-Book{,Italic}.otf
+bash Blex/blex-book.sh --weight 340    # a touch lighter
 ```
 
-`mkbook.sh` reads the variable fonts from `IBMPlexMonoVar/` and fetches them from [IBM/plex](https://github.com/IBM/plex/tree/master/packages/plex-mono-variable) if absent. Then re-run stages 2–3 ( or `bash build.sh --blex` ) so both Book faces flow through the ligature + Nerd Font steps like every other face.
+`blex-book.sh` reads the variable fonts from `IBMPlexMonoVar/` ( fetching them from [IBM/plex](https://github.com/IBM/plex/tree/master/packages/plex-mono-variable) if absent ), instances wght=350 with fonttools, then converts glyf→CFF via FontForge ( quadratic→cubic is exact ). Re-run stages 2–3 ( or `bash build.sh --blex` ) so both Book faces flow through the ligature + Nerd Font steps like every other face.
 
 ## build
 
@@ -95,7 +99,7 @@ fontforge -script Blex/preview.py     # regenerate assets/ligatures.svg ( needs 
 IBM Plex is under the SIL Open Font License 1.1 with **Reserved Font Name “Plex”**, so a modified font may not carry that name.
 
 > [!CAUTION]
-> font-patcher renames `IBM Plex` → `Blex` on output automatically. The stage-3 files are `BlexMonoLigNerdFontMono-*.ttf` ( RFN-safe ). Keep `IBMPlexMonoLig/` local; ship the `Blex…` Nerd Font faces.
+> font-patcher renames `IBM Plex` → `Blex` on output automatically. The stage-3 files are `BlexMonoLigNerdFontMono-*.otf` ( CFF, RFN-safe — the vendor is OTF so the build ships OTF only ). Keep `IBMPlexMonoLig/` local; ship the `Blex…` Nerd Font faces.
 
 - Output fonts are **OFL 1.1** ( IBM Plex OFL + Fira Code OFL ).
 - Ligaturizer's *script* is GPL-3.0 — used as an external tool; the fonts it produces are not GPL.

@@ -383,7 +383,7 @@ function patchBlex() {
   "${DRYRUN}" || mkdir -p "${nfdir}"
 
   for _f in "${ligFonts[@]}"; do
-    for _e in otf ttf; do
+    for _e in otf; do                        # otf-only ( Blex vendor + Book are CFF )
       message "${_e}" "$(basename "${_f}")" "${nfdir}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${nfdir}" )
       # shellcheck disable=SC2015
