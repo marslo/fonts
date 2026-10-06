@@ -9,7 +9,7 @@
   - [Output layout](#output-layout)
   - [The scripts](#the-scripts)
     - [`prep.py` — stage sources by role, repair guillemets](#preppy--stage-sources-by-role-repair-guillemets)
-    - [`guillemet.py` — repair single-chevron `«` / `»`](#guillemetpy--repair-single-chevron-%C2%AB--%C2%BB)
+    - [`guillemet.py` — repair broken `«` `»` `‹` `›` `‚` `„`](#guillemetpy--repair-broken------)
     - [`fixnf.py` — unify the patched Nerd Font metadata](#fixnfpy--unify-the-patched-nerd-font-metadata)
     - [`register.py` — flush the cache + register any font (generic `--install`)](#registerpy--flush-the-cache--register-any-font-generic---install)
   - [Verify it worked](#verify-it-worked)
@@ -48,7 +48,7 @@ The family ships a complete **RIBBI** set — Regular / Italic / Bold / Bold Ita
 Same result, fewer moving parts. The old toolkit had five ordered steps (`01`→`05`) with two separate "clean the metadata" passes. This one is **three stages** driven by one entry script:
 
 ```text
-unzip  ->  prep.py (stage roman + upright-italic, repair «/»)  ->  font-patcher  ->  fixnf.py (unify metadata [+install])
+unzip  ->  prep.py (stage roman + upright-italic, repair «/» ‹/› ‚/„)  ->  font-patcher  ->  fixnf.py (unify metadata [+install])
 ```
 
 Two old steps were removed once their assumptions were checked against the source:
@@ -134,7 +134,7 @@ Everything lives under `--output`:
 <output>/
 ├── src/                                                 # unzipped vendor OTFs (16, flat)
 ├── build/
-│   ├── roman/  Titillium-<W>Upright.otf                 # staged patcher input (Regular's «/» repaired)
+│   ├── roman/  Titillium-<W>Upright.otf                 # staged patcher input («/» ‹/› ‚/„ repaired)
 │   └── italic/ Titillium-<W>UprightItalic.otf           # = vendor Italic, renamed only
 ├── nf/
 │   ├── roman/                                           # font-patcher output for the roman faces
@@ -169,9 +169,15 @@ For each weight it copies two vendor faces into role subfolders, then repairs th
 
 No metadata is touched here. The upright-italic is literally the vendor Italic under a new filename; its slant is real and its outlines are final. All naming/flags are set after patching by `fixnf.py`.
 
-### `guillemet.py` — repair single-chevron `«` / `»`
+### `guillemet.py` — repair broken `«` `»` `‹` `›`
 
 Titillium's **Regular** `Upright` source draws `guillemotleft`/`guillemotright` with a **single** chevron (one contour) instead of the usual **double** chevron (two contours), so `»` shows as a lone `>`. Only the Regular-weight upright is affected — every other face already has the double chevron.
+
+**`‹` / `›` (U+2039 / U+203A):** in the **Light / Regular / Semibold** `Upright` sources `›` is squashed to 20–50 % of `‹`'s height (Regular: a 66-unit sliver vs 330). Bold / Thin / all italics are fine. The squashed glyph is rebuilt by **mirroring its intact partner** about the advance centre (`x' = w - x`, contour direction reversed, `hmtx` lsb recomputed) — no donor needed. Detected by bbox-height ratio `< 0.9`.
+
+**`‚` / `„` (U+201A / U+201E):** the vendor builds them as the face's own `’` / `”` moved down to the baseline. In **Light / Regular / Semibold** `Upright`, `‚` is shrunk to 20–50 % (a barely visible dot); Regular / Light `„` is a lone comma (1 contour, not 2); Semibold `„` is squeezed narrow. Each broken glyph is rebuilt by translating the same face's intact `’` / `”` down; the offset comes from the same-weight normal Titillium (`„` vs `”`). Detected by contour-count mismatch or bbox height `< 0.90` / width `< 0.85` vs `’` / `”`. Bold / Thin are fine.
+
+**`«` / `»` overlap:** Light / Semibold `Upright` draw both chevrons with 2 contours but **overlapping** (gap −40…−93; every correct face has +38…+70), so they smudge together. Treated like the single-chevron case — the donor double chevron is transplanted.
 
 Transplants the correct double-chevron outline (CFF charstring + `hmtx`, metadata untouched) from the same-weight donor `Titillium-<W>.otf` — weight read from the target's `usWeightClass` — into any target whose guillemet is missing or has fewer than two contours. Idempotent: correct faces are skipped (use `--force` to override).
 
@@ -337,7 +343,9 @@ A sample header line and the meaning of every term it prints:
 | `OS/2.fsSelection`              | OS/2 style bits: `0x01` ITALIC, `0x20` BOLD, `0x40` REGULAR, `0x80` USE_TYPO_METRICS, `0x100` WWS                                                      |
 | `post` / CFF `ItalicAngle`      | slant in **degrees** — `0` upright, `-13` italic (CoreText reads the CFF one to judge OTF slant)                                                       |
 | `name 1/2/4/6/16/17`            | name-table IDs: family / subfamily / full name / PostScript name / typographic family / typographic subfamily                                          |
-| `guillemets « »`                | contour count of `«` / `»` — must be **2** (double chevron); `1` is the broken single chevron                                                          |
+| `guillemets « »`                | contour count of `«` / `»` — must be **2** (double chevron) with **no overlap** between the two chevrons; `1` is the broken single chevron                                                         |
+| `low quotes ‚ „`                | `‚` / `„` contour count equals `’` / `”` and bbox-height ratio **≥ 0.90** (a shrunk `‚` shows ~0.20–0.50; a lone-comma `„` shows 1c)                  |
+| `guillemets ‹ ›`                | bbox-height ratio of `‹` / `›` — must be **≥ 0.90**; a squashed `›` shows ~0.20–0.50                                                                   |
 | CoreText `slant` (`--coretext`) | CoreText's own **normalized** slant estimate — `~0.000` upright, `~0.069` real italic; a different quantity from the degree-based `italicAngle`        |
 
 
@@ -394,6 +402,7 @@ Then re-check with [Verify it worked](#verify-it-worked). If a face **still** re
 - `fc-match` **is right but the browser is wrong** — that's the CoreText/`fontd` layer, not fontconfig. Re-run `--install`.
 - `<b>` **/** `font-weight: bold` **renders un-bold (and isn't slanted)** — that upright Bold face is being reported *italic* by CoreText (signature `italic=Y slant≈0.08x`), so `bold` resolves to Bold Italic. Diagnose with [Diagnose a false italic reading](#diagnose-a-false-italic-reading); the usual culprit is a stray `head.macStyle` italic bit (`0x02`).
 - `»` **shows as a single** `>` **(Regular only)** — the Regular upright `«`/`»` glyphs ship as a single chevron (one contour). `prep.py` already runs `guillemet.py` before patching; to repair an already-installed face, run `python3 guillemet.py ~/Library/Fonts/TitilliumNerdFont-UprightRegular.otf --root=/path/to/sources` then flush the font cache.
+- `›` **(U+203A) looks like a thin dash** — Light / Regular / Semibold upright `›` is squashed. `guillemet.py` (run by `prep.py`) now mirrors it from `‹`; repair an installed face with `python3 guillemet.py ~/Library/Fonts/TitilliumNerdFont-UprightRegular.otf` (no `--root` needed for `‹ ›`), then flush the font cache.
 - `run.sh: Permission denied` — the execute bit isn't set (e.g. `chmod` is aliased to `sudo chmod` in your shell). Run via the interpreter instead: `bash run.sh ...` (and `python3 prep.py ...`), or set the bit with the real binary: `/bin/chmod +x *.sh *.py`.
 - **font-patcher not found** — pass `--patcher /path/to/font-patcher`, or set `FONT_PATCHER`, or place your nerd-fonts clone at one of the autodetected paths.
 - `WARNING: Possible problem with the weight metadata detected` **(Thin)** — harmless font-patcher notice for the 250-weight Thin; `fixnf.py` reads the real `usWeightClass` and names it correctly.

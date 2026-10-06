@@ -127,7 +127,7 @@ else
 fi
 
 # --- [2/4] stage roman + upright-italic + guillemet ------------------------
-message '2/4' 'stage sources' '(roman + upright-italic) + repair «/»'
+message '2/4' 'stage sources' '(roman + upright-italic) + repair «/» ‹/› ‚/„'
 declare -a PREP_SRC=()
 for d in "${SRCS[@]}"; do PREP_SRC+=( --src "${d}" ); done
 "${PY}" "${HERE}/prep.py" "${PREP_SRC[@]}" --build "${BUILD}" ${DRY}

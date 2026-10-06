@@ -26,8 +26,10 @@ import subprocess
 import sys
 import tempfile
 
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont
+from guillemet import contour_gap
 
 FAMILY = "Titillium Nerd Font Upright"
 RIBBI = {"Regular", "Bold"}
@@ -42,6 +44,8 @@ USE_TYPO = 0x80
 WWS = 0x100
 
 GUILLEMETS = ((0x00AB, "\u00AB"), (0x00BB, "\u00BB"))
+SINGLE_GUIL = (0x2039, 0x203A)   # ‹ ›
+LOWQUOTES = ((0x201A, 0x2019, "\u201A"), (0x201E, 0x201D, "\u201E"))   # (‚ vs ’), („ vs ”)
 PUA = ((0xE000, 0xF8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD))
 
 GREEN, RED, DIM, RST = "\033[32m", "\033[31m", "\033[2m", "\033[0m"
@@ -104,6 +108,12 @@ def contour_count(gs, gname):
     return sum(1 for op, _ in pen.value if op == "moveTo")
 
 
+def bbox_height(gs, gname):
+    pen = BoundsPen(gs)
+    gs[gname].draw(pen)
+    return (pen.bounds[3] - pen.bounds[1]) if pen.bounds else 0
+
+
 def is_pua(cp):
     return any(lo <= cp <= hi for lo, hi in PUA)
 
@@ -157,10 +167,31 @@ def check_face(path):
     for cp, sym in GUILLEMETS:
         gname = cmap.get(cp)
         n = contour_count(gs, gname) if gname else -1
+        gap = contour_gap(gs, gname) if gname else None
         guil.append((sym, gname, n))
-        if n != 2:
+        if n != 2 or (gap is not None and gap < 0):
             guil_ok = False
-    checks.append(("guillemets « »", " ".join(f"{s}={n}c" for s, _, n in guil), "both 2c", guil_ok))
+    checks.append(("guillemets « »", " ".join(f"{s}={n}c" for s, _, n in guil), "both 2c, no overlap", guil_ok))
+
+    sl, sr = cmap.get(SINGLE_GUIL[0]), cmap.get(SINGLE_GUIL[1])
+    hl = bbox_height(gs, sl) if sl else 0
+    hr = bbox_height(gs, sr) if sr else 0
+    ratio = (min(hl, hr) / max(hl, hr)) if max(hl, hr) else 0.0
+    checks.append(("guillemets ‹ ›", f"h‹={hl} h›={hr} ratio={ratio:.2f}", "ratio >= 0.90", ratio >= 0.9))
+
+    lq, lq_ok = [], True
+    for cp, src_cp, sym in LOWQUOTES:
+        ln, sn = cmap.get(cp), cmap.get(src_cp)
+        if not ln or not sn:
+            lq.append(f"{sym}=missing")
+            lq_ok = False
+            continue
+        hl, hs = bbox_height(gs, ln), bbox_height(gs, sn)
+        r = (hl / hs) if hs else 0.0
+        lq.append(f"{sym}={contour_count(gs, ln)}c h{r:.2f}")
+        if contour_count(gs, ln) != contour_count(gs, sn) or r < 0.9:
+            lq_ok = False
+    checks.append(("low quotes ‚ „", " ".join(lq), "same c as ’ ”, h >= 0.90", lq_ok))
 
     passed = all(ok for *_, ok in checks)
     info = {"wc": wc, "weight": weight, "italic": italic, "upm": upm,
