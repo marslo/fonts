@@ -29,8 +29,8 @@
 
 ```bash
 #  ┌─────────── Blex/build.sh ( stages 0–2 ) ───────────┐   ┌── build.sh --blex ( stage 3 ) ──┐
-IBMPlexMono/*.otf + Book(350)  ──[ ligaturize.sh ]──▶  IBMPlexMonoLig/  ──[ font-patcher + blex-fixnames.py ]──▶  IBMPlexMonoLigNF/
-# vendor + Book ( blex-book.sh )    + Fira Code + calt      ligatures        + Nerd Font glyphs ( otf-only, Book kept distinct )
+IBMPlexMono/*.otf + Book(350)  ──[ glyphfix.py ]──[ ligaturize.sh ]──▶  IBMPlexMonoLig/  ──[ font-patcher + blex-fixnames.py ]──▶  IBMPlexMonoLigNF/
+# vendor + Book ( blex-book.sh )  + ⌥ ⌘ ⇧ …   + Fira Code + calt      ligatures        + Nerd Font glyphs ( otf-only, Book kept distinct )
 ```
 
 ```bash
@@ -39,7 +39,8 @@ Blex/
 ├── IBMPlexMonoVar/     # stage-0 inputs — IBM Plex Mono variable fonts ( wght axis ), used only to instance Book
 ├── IBMPlexMonoLig/     # stage-2 output — Fira Code ligatures added ( family: IBMPlexMonoLig )
 ├── IBMPlexMonoLigNF/   # stage-3 output — NF patched; files are BlexMonoLigNerdFontMono-* ( see naming below )
-├── build.sh            # stages 0–2 driver — Book + ligaturize -> IBMPlexMonoLig/ ( repo-root build.sh does stage 3 )
+├── build.sh            # stages 0–2 driver — Book + glyphfix + ligaturize -> IBMPlexMonoLig/ ( repo-root build.sh does stage 3 )
+├── glyphfix.py         # stage 1 — add the glyphs Plex lacks: ⌥ + macOS key symbols ⌘ ⇧ ⌃ ⎋ ⏎ ⌫ ⌦ ⇥ ⇤ ↵ ⇪ ⏏ ␣ ( from the face's own − stroke )
 ├── blex-book.sh        # stage 0 — instance the Book ( 350 ) weight ( wraps blex-book.py )
 ├── blex-book.py        # fontTools instancer @ wght=350 + FontForge glyf→CFF
 ├── blex-fixnames.py    # stage-3 helper — canonical name/filename by usWeightClass ( keeps Book distinct )

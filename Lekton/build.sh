@@ -3,13 +3,13 @@
 #      FileName : build.sh
 #        Author : marslo
 #       Created : 2026-09-04 04:12:03
-#    LastChange : 2026-09-04 05:06:09
+#    LastChange : 2026-11-03 19:00:15
 # =============================================================================
 # build the ligaturized desktop Lekton ( LektonLig ) — the complex half of the Lekton pipeline, kept out of the repo-root build.sh:
 #
 #   Lekton-{Regular,Bold,Italic}.ttf
 #     └─[ bolditalic.py ]─ synth Bold Italic
-#         └─[ dotzero.py ]─ dot 0   └─[ glyphfix.py --square ]─ enlarge • + add ^ `   ( optimized, temp )
+#         └─[ dotzero.py ]─ dot 0   └─[ glyphfix.py --square ]─ enlarge • + add ^ ` ⌥ ← ↑ → ↓ + key symbols   ( optimized, temp )
 #             └─[ ligaturize.sh -> Ligaturizer ]─ + Fira Code ligatures ─▶ LektonLig/
 #
 # the repo-root build.sh ( patchLekton ) then Nerd-Font-patches LektonLig/ -> LektonLigNF/.
@@ -50,8 +50,8 @@ for f in "${BOLDITALIC}" "${DOTZERO}" "${GLYPHFIX}" "${LIGATURIZE}"; do
   test -f "${f}" || die "missing: ${f}"
 done
 
-# 1. optimized base faces in a temp dir: synth Bold Italic, dot 0, enlarge • + add ^ `
-step 'optimized ( Bold Italic + dotted 0 + big • + ^ ` )'
+# 1. optimized base faces in a temp dir: synth Bold Italic, dot 0, enlarge • + add ^ ` ⌥ + arrows + key symbols
+step 'optimized ( Bold Italic + dotted 0 + big • + ^ ` ⌥ + arrows + keys )'
 WORK="$( mktemp -d )"
 trap 'rm -rf "${WORK}"' EXIT
 run cp "${HERE}/Lekton-Regular.ttf" "${HERE}/Lekton-Bold.ttf" "${HERE}/Lekton-Italic.ttf" "${WORK}/"

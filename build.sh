@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-09-04 00:56:02
+#   LastChange : 2026-11-03 18:59:43
 #=============================================================================
 
 set -euo pipefail
@@ -21,6 +21,7 @@ declare -r ME="bash $(basename "${BASH_SOURCE[0]:-$0}")"
 # shellcheck disable=SC2155
 declare -r SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]:-$0}" )" && pwd )"
 declare -r TU_RUN="${SCRIPT_DIR}/Titillium/upright/scripts/run.sh"   # titillium upright pipeline
+declare -r APPLELOGO="${SCRIPT_DIR}/nf-applelogo.py"                  # alias U+F8FF ( Apple logo ) -> nf-fa-apple after each font-patcher run
 
 # for parameters
 declare SANS=false
@@ -67,8 +68,8 @@ OPTIONS
   $(c G)--recursive-desktop$(c)     patch for recursive desktop font
   $(c G)--recursive-mono$(c)        patch for recursive mono font
   $(c G)--titillium-upright$(c)     build Titillium Upright NF: italic + NF + metadata fix. $(c 0Wdi)( src $(c 0Mi)Titillium$(c 0Wdi) -> target $(c 0Mi)Titillium/upright $(c 0Wdi))$(c)
-  $(c G)--lekton$(c)                build Lekton + Fira Code ligatures + NF $(c 0Wdi)( Lekton -> LektonLig -> LektonLigNF, via Lekton/build.sh )$(c)
-  $(c G)--blex$(c)                  build IBM Plex Mono + Book (350) + Fira Code ligatures + NF $(c 0Wdi)( IBMPlexMono -> IBMPlexMonoLig -> NF, via Blex/build.sh )$(c)
+  $(c G)--lekton$(c)                build Lekton + ⌥ ← ⌘… + Fira Code ligatures + NF $(c 0Wdi)( Lekton -> LektonLig -> LektonLigNF, via Lekton/build.sh )$(c)
+  $(c G)--blex$(c)                  build IBM Plex Mono + Book (350) + ⌥ ⌘… + Fira Code ligatures + NF $(c 0Wdi)( IBMPlexMono -> IBMPlexMonoLig -> NF, via Blex/build.sh )$(c)
 
   $(c G)--dry-run$(c)               show what would be done, but do not execute
   $(c G)-h$(c), $(c G)--help$(c)              show this help message
@@ -104,6 +105,28 @@ function message() {
   printf "\n$(c Wdi)..$(c) %b\n" "${msg}"
 }
 
+# alias U+F8FF ( Apple logo ) to nf-fa-apple in the fonts under ${2:-} written after the marker file ${1}
+function appleLogo() {
+  local marker="${1}" out="${2:-}"
+  test -n "${out}" && test -d "${out}" || return 0
+  if test -f "${APPLELOGO}"; then
+    python3 "${APPLELOGO}" --newer "${marker}" "${out}" || echo -e "$(c Y)WARN$(c) : nf-applelogo.py failed on ${out}"   # stdout: callers drop font-patcher stderr
+  else
+    echo -e "$(c Y)WARN$(c) : ${APPLELOGO} not found, U+F8FF not aliased"
+  fi
+}
+
+# run a font-patcher command ( "${FONT_PATCHER}" args... ), then alias U+F8FF -> nf-fa-apple in the fonts it wrote to its -out dir
+function fontPatcher() {
+  local a prev='' out='' marker rc=0
+  for a in "$@"; do test '-out' = "${prev}" && out="${a}"; prev="${a}"; done
+  marker="$( mktemp )"
+  "$@" || rc=$?
+  test 0 -eq "${rc}" && appleLogo "${marker}" "${out}"
+  rm -f "${marker}"
+  return "${rc}"
+}
+
 function patchRecursiveDesktop() {
   if ls Recursive/RecursiveDesktopNF/*/* >/dev/null 2>&1; then
     message "Recursive/RecursiveDesktopNF/*/*"
@@ -120,7 +143,7 @@ function patchRecursiveDesktop() {
       message "${_e}" "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" --name "${name}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done
   done < <( fd -u -tf -e ttf -e otf --full-path Recursive/RecursiveDesktop/ )
 }
@@ -140,7 +163,7 @@ function patchRecursiveMono() {
       message "${_e}" "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done
   done < <( fd -u -tf -e ttf -e otf -E '*NerdFont*' --full-path Recursive/RecursiveCode/ )
 }
@@ -158,7 +181,7 @@ function patchMonaco() {
       message "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done
   done < <( fd -u -tf -e ttf -e otf --full-path ./Monaco )
 }
@@ -178,7 +201,7 @@ function patchOperatorMono() {
       message "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done
   done < <( fd . Operator/OperatorMono Operator/OperatorMonoLig Operator/OperatorMonoSSmLig -tf -e ttf -e otf )
 }
@@ -198,7 +221,7 @@ function patchOperatorPro() {
       message "$(basename "${_f}")" "${outpath}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done
   done < <( fd . Operator/OperatorPro -tf -e ttf -e otf )
 }
@@ -267,7 +290,7 @@ function patchSans() {
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       [[ "${#BASEOPT[@]}" -gt 0 ]] && cmd+=( "${BASEOPT[@]}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done
   done
 }
@@ -284,7 +307,7 @@ function patchMono() {
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${outpath}" )
       [[ "${#BASEOPT[@]}" -gt 0 ]] && cmd+=( "${BASEOPT[@]}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done;
   done < <( fd -u -tf -e ttf -e otf -E '*NerdFont*' -E '*[Uu]pright*' -E out --full-path "${path}" )
 }
@@ -310,13 +333,18 @@ function patchTitilliumUpright() {
   "${DRYRUN}" && runCmd+=( --dry-run )
 
   message "titillium upright" "${srcLabel}" "${fonts#"${SCRIPT_DIR}/"}"
+  local marker; marker="$( mktemp )"
   "${runCmd[@]}"
+  # font-patcher runs inside run.sh: alias U+F8FF -> nf-fa-apple on the NF faces it delivered
+  # shellcheck disable=SC2015
+  "${DRYRUN}" && printf "  $(c Wi)>> \$ python3 %q %q$(c)\n" "${APPLELOGO}" "${fonts}" || appleLogo "${marker}" "${fonts}"
+  rm -f "${marker}"
   # clean intermediates only on success; a failed/interrupted run keeps .build (partial nf/ + logs) for inspection, and set -e already aborted before here
   "${DRYRUN}" || rm -rf "${work}"
 }
 
 # build the ligaturized Lekton Nerd Font ( no plain NF ):
-#   Lekton/build.sh -> Lekton/LektonLig ( Bold Italic + dotted 0 + big • + ^ grave + Fira Code ligatures )
+#   Lekton/build.sh -> Lekton/LektonLig ( Bold Italic + dotted 0 + big • + ^ grave + ⌥ + arrows + key symbols + Fira Code ligatures )
 #   then font-patcher -> Lekton/LektonLigNF/ ( otf + ttf ) ; honors --dry-run.
 function patchLekton() {
   local path='./Lekton'
@@ -349,7 +377,7 @@ function patchLekton() {
       message "${_e}" "$(basename "${_f}")" "${nfdir}"
       cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${nfdir}" )
       # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || "${cmd[@]}" 2>/dev/null
+      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
     done
   done
 
@@ -358,8 +386,8 @@ function patchLekton() {
   "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -f %s$(c)\n" "${path}/LektonNerdFontMono-*.{otf,ttf}" || rm -f "${path}"/LektonNerdFontMono-*.otf "${path}"/LektonNerdFontMono-*.ttf
 }
 
-# build IBM Plex Mono + Book (350) + Fira Code ligatures, then Nerd Font patch ( otf-only ):
-#   Blex/build.sh -> Blex/IBMPlexMonoLig ( Book + Fira Code ligatures )
+# build IBM Plex Mono + Book (350) + ⌥ ( Blex/glyphfix.py ) + Fira Code ligatures, then Nerd Font patch ( otf-only ):
+#   Blex/build.sh -> Blex/IBMPlexMonoLig ( Book + ⌥ + key symbols + Fira Code ligatures )
 #   then font-patcher -> Blex/IBMPlexMonoLigNF/ ( via blex-fixnames.py ) ; honors --dry-run.
 function patchBlex() {
   local path='./Blex'
@@ -398,7 +426,7 @@ function patchBlex() {
       continue
     fi
     _tmp="$( mktemp -d )"
-    "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext otf -out "${_tmp}" 2>/dev/null
+    fontPatcher "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext otf -out "${_tmp}" 2>/dev/null
     shopt -s nullglob; _patched=( "${_tmp}"/*.otf ); shopt -u nullglob
     test -f "${_patched[0]:-}" && python3 "${fixnames}" --in "${_patched[0]}" --out-dir "${nfdir}"
     rm -rf "${_tmp}"

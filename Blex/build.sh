@@ -3,13 +3,14 @@
 #      FileName : build.sh
 #        Author : marslo
 #       Created : 2026-09-04 04:48:29
-#    LastChange : 2026-09-04 04:59:48
+#    LastChange : 2026-11-03 19:00:21
 # =============================================================================
 # build the ligaturized IBM Plex Mono ( IBMPlexMonoLig ) — the complex half of the Blex pipeline, kept out of the repo-root build.sh:
 #
 #   IBMPlexMono/*.otf ( vendor, all-OTF )  +  IBMPlexMonoVar/ ( variable fonts )
 #     └─[ blex-book.sh ]─ instance the Book (350) weight ( upright + italic )
-#         └─[ ligaturize.sh -> Ligaturizer ]─ + Fira Code ligatures ─▶ IBMPlexMonoLig/
+#         └─[ glyphfix.py ]─ add ⌥ + macOS key symbols ( ⌘ ⇧ ⌃ ⎋ ⏎ ⌫ ⌦ ⇥ ⇤ ↵ ⇪ ⏏ ␣ )
+#             └─[ ligaturize.sh -> Ligaturizer ]─ + Fira Code ligatures ─▶ IBMPlexMonoLig/
 #
 # the repo-root build.sh ( patchBlex ) then Nerd-Font-patches IBMPlexMonoLig/ -> IBMPlexMonoLigNF/ via blex-fixnames.py ( keeps Book distinct + names canonical ).
 #
@@ -23,6 +24,7 @@ declare -r BOOK="${HERE}/blex-book.sh"
 # shellcheck disable=SC2155
 declare -r ROOT="$( git -C "${HERE}" rev-parse --show-toplevel 2>/dev/null || ( cd "${HERE}/.." && pwd ) )"
 declare -r LIGATURIZE="${ROOT}/ligaturize.sh"       # shared, repo-root
+declare -r GLYPHFIX="${HERE}/glyphfix.py"
 declare -r VENDOR="${HERE}/IBMPlexMono"             # all-OTF vendor faces
 declare -r LIG="${HERE}/IBMPlexMonoLig"
 declare DRYRUN=false
@@ -44,7 +46,7 @@ for arg in "${@}"; do
 done
 
 command -v fontforge >/dev/null 2>&1 || die 'fontforge required ( brew install fontforge )'
-for f in "${BOOK}" "${LIGATURIZE}"; do
+for f in "${BOOK}" "${GLYPHFIX}" "${LIGATURIZE}"; do
   test -f "${f}" || die "missing: ${f}"
 done
 
@@ -56,7 +58,11 @@ trap 'rm -rf "${WORK}"' EXIT
 run cp "${VENDOR}"/*.otf "${WORK}/"
 run bash "${BOOK}" --to "${WORK}"
 
-# 2. copy Fira Code ligatures ( + calt ) into every face -> IBMPlexMonoLig/
+# 2. add the missing glyphs ( ⌥ + macOS key symbols ) into every face, in place
+step 'glyphfix ( ⌥ + key symbols ) -> work dir'
+run fontforge -quiet -script "${GLYPHFIX}" -o "${WORK}" "${WORK}"
+
+# 3. copy Fira Code ligatures ( + calt ) into every face -> IBMPlexMonoLig/
 step 'ligaturize ( IBM Plex Mono + Fira Code ) -> IBMPlexMonoLig/'
 run rm -f "${LIG}"/*.ttf "${LIG}"/*.otf
 run bash "${LIGATURIZE}" --from "${WORK}" --to "${LIG}" --name IBMPlexMonoLig
