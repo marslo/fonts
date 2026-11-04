@@ -3,7 +3,7 @@
 #      FileName : ligaturize.sh
 #        Author : marslo
 #       Created : 2026-09-04 05:48:03
-#    LastChange : 2026-09-04 05:50:01
+#    LastChange : 2026-11-03 20:49:39
 # =============================================================================
 # add Fira Code ligatures to any monospace font via Ligaturizer ( /opt/Ligaturizer ):
 # - copies FiraCode's ligature glyphs + calt rules into each face, scale-corrected,
@@ -11,12 +11,13 @@
 #
 # <name> defaults to the basename of --to ( --to .../LektonLig -> LektonLig ); pass --name to override — callers pass it explicitly so a later dir rename can't silently change the family.
 #
-# the source faces must already carry '^' ( asciicircum ) — Ligaturizer aborts without it ( Lekton needs Lekton/glyphfix.py first; IBM Plex already ships it ).
+# the source faces must already carry '^' ( asciicircum ) — Ligaturizer aborts without it ( Lekton needs font-lekton's scripts/glyphfix.py first; IBM Plex already ships it ).
 #
 # usage:
 #   bash ligaturize.sh --from <src-dir> --to <dst-dir> [ --name <family> ] [ -n | --dry-run ]
 #   e.g. bash ligaturize.sh --from ./Blex/IBMPlexMono --to ./Blex/IBMPlexMonoLig
-#        bash ligaturize.sh --from <optimized-dir>    --to ./Lekton/LektonLig    --name LektonLig
+#        bash ligaturize.sh --from <optimized-dir>    --to <dst-dir>/LektonLig   --name LektonLig
+# ( Lekton itself ligaturizes with its own copy, Lekton/scripts/ligaturize.sh, in the font-lekton submodule. )
 #
 # override the Ligaturizer location with $LIGATURIZER.
 

@@ -1,0 +1,4 @@
+[submodule "Lekton"]
+	path = Lekton
+	url = ../font-lekton.git
+	branch = main

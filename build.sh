@@ -4,7 +4,7 @@
 #     FileName : build.sh
 #       Author : marslo
 #      Created : 2024-04-21 00:21:58
-#   LastChange : 2026-11-03 18:59:43
+#   LastChange : 2026-11-03 20:49:32
 #=============================================================================
 
 set -euo pipefail
@@ -68,7 +68,7 @@ OPTIONS
   $(c G)--recursive-desktop$(c)     patch for recursive desktop font
   $(c G)--recursive-mono$(c)        patch for recursive mono font
   $(c G)--titillium-upright$(c)     build Titillium Upright NF: italic + NF + metadata fix. $(c 0Wdi)( src $(c 0Mi)Titillium$(c 0Wdi) -> target $(c 0Mi)Titillium/upright $(c 0Wdi))$(c)
-  $(c G)--lekton$(c)                build Lekton + ⌥ ← ⌘… + Fira Code ligatures + NF $(c 0Wdi)( Lekton -> LektonLig -> LektonLigNF, via Lekton/build.sh )$(c)
+  $(c G)--lekton$(c)                build Lekton + ⌥ ← ⌘… + Fira Code ligatures + NF $(c 0Wdi)( optimized -> LektonLig -> LektonLigNF, via the font-lekton submodule's Lekton/build.sh )$(c)
   $(c G)--blex$(c)                  build IBM Plex Mono + Book (350) + ⌥ ⌘… + Fira Code ligatures + NF $(c 0Wdi)( IBMPlexMono -> IBMPlexMonoLig -> NF, via Blex/build.sh )$(c)
 
   $(c G)--dry-run$(c)               show what would be done, but do not execute
@@ -343,47 +343,19 @@ function patchTitilliumUpright() {
   "${DRYRUN}" || rm -rf "${work}"
 }
 
-# build the ligaturized Lekton Nerd Font ( no plain NF ):
-#   Lekton/build.sh -> Lekton/LektonLig ( Bold Italic + dotted 0 + big • + ^ grave + ⌥ + arrows + key symbols + Fira Code ligatures )
-#   then font-patcher -> Lekton/LektonLigNF/ ( otf + ttf ) ; honors --dry-run.
+# build Lekton via the font-lekton submodule's own build.sh ( no plain NF ):
+#   Lekton/original -> optimized/ ( Bold Italic + dotted 0 + big • + ^ grave + ⌥ + arrows + key symbols )
+#   -> LektonLig/ ( + Fira Code ligatures ) -> LektonLigNF/ ( font-patcher otf + ttf + U+F8FF alias ) ; honors --dry-run.
 function patchLekton() {
-  local path='./Lekton'
-  local ligbuild="${SCRIPT_DIR}/Lekton/build.sh"               # Bold Italic + optimized + ligaturize -> LektonLig/
-  local ligdir="${path}/LektonLig"                             # optimized + ligatures ( 4 faces )
-  local nfdir="${path}/LektonLigNF"                            # + Nerd Font glyphs ( otf + ttf )
+  local path="${SCRIPT_DIR}/Lekton"
+  local build="${path}/build.sh"                               # font-lekton: original -> optimized -> LektonLig -> LektonLigNF
 
-  test -f "${ligbuild}" || die "Lekton/build.sh not found: ${ligbuild}"
-  command -v fontforge >/dev/null 2>&1 || die "fontforge required ( brew install fontforge )"
+  test -f "${build}" || die "Lekton submodule not initialized ( ${build} missing ); run: git submodule update --init Lekton"
 
-  # 1. optimized + ligatures ( delegated to Lekton/build.sh ) -> LektonLig/
-  message "build LektonLig ( Bold Italic + fixes + ligatures )" "$(basename "${path}")" "${ligdir}"
-  local -a ligCmd=( bash "${ligbuild}" )
-  "${DRYRUN}" && ligCmd+=( --dry-run )
-  "${ligCmd[@]}"
-
-  # 2. Nerd Font patch LektonLig -> LektonLigNF/ ( otf + ttf )
-  shopt -s nullglob
-  local -a ligFonts=( "${ligdir}"/*.ttf )
-  shopt -u nullglob
-  test "${#ligFonts[@]}" -eq 0 && return 0
-
-  message "clean + NF patch" "LektonLig" "${nfdir}"
-  # shellcheck disable=SC2015
-  "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -rf %q$(c)\n" "${nfdir}" || rm -rf "${nfdir:?}"
-  "${DRYRUN}" || mkdir -p "${nfdir}"
-  local _f _e cmd
-  for _f in "${ligFonts[@]}"; do
-    for _e in otf ttf; do
-      message "${_e}" "$(basename "${_f}")" "${nfdir}"
-      cmd=( "${FONT_PATCHER}" "$(realpath "${_f}" --relative-to=.)" "${MONO_OPTIONS[@]}" -ext "${_e}" -out "${nfdir}" )
-      # shellcheck disable=SC2015
-      "${DRYRUN}" && printf "  $(c Wi)>> \$ %s$(c)\n" "$(printf "%q " "${cmd[@]}")" || fontPatcher "${cmd[@]}" 2>/dev/null
-    done
-  done
-
-  # 3. drop the old plain NF ( superseded by LektonLigNF )
-  # shellcheck disable=SC2015
-  "${DRYRUN}" && printf "  $(c Wi)>> \$ rm -f %s$(c)\n" "${path}/LektonNerdFontMono-*.{otf,ttf}" || rm -f "${path}"/LektonNerdFontMono-*.otf "${path}"/LektonNerdFontMono-*.ttf
+  message "optimized -> LektonLig -> LektonLigNF" "font-lekton" "${path}"
+  local -a buildCmd=( env FONT_PATCHER="${FONT_PATCHER}" bash "${build}" )
+  "${DRYRUN}" && buildCmd+=( --dry-run )
+  "${buildCmd[@]}"
 }
 
 # build IBM Plex Mono + Book (350) + ⌥ ( Blex/glyphfix.py ) + Fira Code ligatures, then Nerd Font patch ( otf-only ):
@@ -437,7 +409,7 @@ function patchAllMono() {
   patchOperatorMono
   patchMonaco
   patchRecursiveMono
-  patchLekton                 # lekton: Lekton -> LektonLig ( ligatures ) -> LektonLigNF
+  patchLekton                 # lekton: font-lekton submodule -> LektonLig ( ligatures ) -> LektonLigNF
   patchBlex                   # blex: ligaturize IBM Plex Mono + Nerd Font
 
   # common mono
@@ -518,7 +490,7 @@ path="$(sed 's#/*$##' <<< "${path}")"
 "${RECURSIVE_D}"     && patchRecursiveDesktop
 "${RECURSIVE_M}"     && patchRecursiveMono
 "${TITILLIUM_UP}"    && patchTitilliumUpright
-"${LEKTON}"          && patchLekton "${PATCHER_OPT[@]}"
+"${LEKTON}"          && patchLekton
 "${BLEX}"            && patchBlex
 
 "${SANS}"            && patchSans "${path}" "${PATCHER_OPT[@]}"

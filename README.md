@@ -120,7 +120,7 @@ $ brew install fontforge
 | mono             | **audiolink/mono**        |       √       | `bash build.sh --mono --path audiolink/mono`                                                            | `bash install.sh audiolink`         |
 | mono             | **monaspace/radon**       |       √       | `bash build.sh --mono --path monaspace/radon`                                                           | `bash install.sh monaspace`         |
 | mono             | **Monaco**                |       √       | `bash build.sh --monaco`                                                                                | `bash install.sh Monaco`            |
-| mono             | **Lekton**                |       √       | `bash build.sh --mono --path Lekton`                                                                    | `bash install.sh Lekton`            |
+| mono             | **Lekton**                |       √       | `bash build.sh --lekton`                                                                                | `bash install.sh Lekton`            |
 | mono             | **MonoLisa**              |       √       | `bash build.sh --mono --path MonoLisa`                                                                  | `bash install.sh MonoLisa`          |
 | mono             | **agave**                 |       √       | `bash build.sh --mono --path agave`                                                                     | `bash install.sh agave`             |
 | mono             | **iosevka**               |       √       | `bash build.sh --mono --path iosevka/marslo`<br>`bash build.sh --mono --path iosevka/ss15`              | `bash install.sh iosevka`           |
